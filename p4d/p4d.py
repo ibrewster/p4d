@@ -378,7 +378,7 @@ class py4d_cursor(object):
 
         numcols = lib4d_sql.fourd_num_columns(self.result);
         inbuff = ffi.new("char*[1024]")
-        strlen = ffi.new("int*")
+        strlen = ffi.new("size_t*")
 
         row=[]
         for col in range(numcols):

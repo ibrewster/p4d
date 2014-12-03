@@ -277,7 +277,7 @@ int fourd_next_row(FOURD_RESULT *res);
 const char * fourd_get_column_name(FOURD_RESULT *res,unsigned int numCol);
 FOURD_TYPE fourd_get_column_type(FOURD_RESULT *res,unsigned int numCol);
 int fourd_num_columns(FOURD_RESULT *res);
-int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,unsigned long *len);
+int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,size_t *len);
 
 
 FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query);

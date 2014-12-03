@@ -236,7 +236,8 @@ void * fourd_field(FOURD_RESULT *res,unsigned int numCol)
 	}
 	return elmt->pValue;
 }
-int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,unsigned long *len)
+
+int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,size_t *len)
 {
 	unsigned int nbCol=res->row_type.nbColumn;
 	unsigned int nbRow=res->row_count;

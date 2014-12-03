@@ -1,2 +1,9 @@
+*.xcodeproj
 .DS_Store
 __pycache__
+DerivedData
+*.pyc
+package.sh
+testMain.c
+dist
+*.egg-info

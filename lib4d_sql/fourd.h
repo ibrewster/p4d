@@ -136,8 +136,8 @@ typedef short FOURD_WORD;
 typedef int FOURD_LONG;
 typedef long long FOURD_LONG8;
 typedef double FOURD_REAL;
-typedef struct{int exp;char sign;int data_length;void* data;}FOURD_FLOAT;
-typedef struct{short year;char mounth;char day;unsigned int milli;}FOURD_TIMESTAMP;
+typedef struct{int exp;unsigned char sign;int data_length;void* data;}FOURD_FLOAT;
+typedef struct{short year;unsigned char mounth;unsigned char day;unsigned int milli;}FOURD_TIMESTAMP;
 typedef long long FOURD_DURATION;//in milliseconds
 typedef struct{int length;unsigned char *data;}FOURD_STRING;
 typedef struct{int length;void *data;}FOURD_BLOB;
@@ -277,7 +277,7 @@ int fourd_next_row(FOURD_RESULT *res);
 const char * fourd_get_column_name(FOURD_RESULT *res,unsigned int numCol);
 FOURD_TYPE fourd_get_column_type(FOURD_RESULT *res,unsigned int numCol);
 int fourd_num_columns(FOURD_RESULT *res);
-int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,int *len);	
+int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,unsigned long *len);
 
 
 FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query);

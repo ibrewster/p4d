@@ -77,7 +77,7 @@ int _valid_query(FOURD *cnx,const char *request);
 /* Memory Allocation */
 /*********************/
 void *_copy(FOURD_TYPE type,void *org);
-char *_serialize(char *data,int *size, FOURD_TYPE type, void *pObj);
+char *_serialize(char *data,unsigned int *size, FOURD_TYPE type, void *pObj);
 void Free(void *p);
 void FreeFloat(FOURD_FLOAT *p);
 void FreeString(FOURD_STRING *p);
@@ -89,8 +89,8 @@ void PrintData(const void *data,unsigned int size);
 #define strtok_s(a,b,c) strtok(a,b)
 #define strcpy_s(s,size,cs) strncpy(s,cs,size)
 #define strncpy_s(s,ms,cs,size) strncpy(s,cs,size)
-	int sprintf_s(char *buff,int size,const char* format,...);
-	int _snprintf_s(char *buff, int size, int count, const char *format,...);
+	int sprintf_s(char *buff,size_t size,const char* format,...);
+	int _snprintf_s(char *buff, size_t size, size_t count, const char *format,...);
 #endif
 
 

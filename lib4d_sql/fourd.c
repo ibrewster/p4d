@@ -38,7 +38,7 @@
 
 FOURD* fourd_init()
 {
-	int iResult=0;
+	//int iResult=0;
 	FOURD* cnx=calloc(1,sizeof(FOURD));
 
 	cnx->socket = INVALID_SOCKET;
@@ -178,7 +178,7 @@ int fourd_close_statement(FOURD_RESULT *res)
 FOURD_LONG * fourd_field_long(FOURD_RESULT *res,unsigned int numCol)
 {
 	unsigned int nbCol=res->row_type.nbColumn;
-	unsigned int nbRow=res->row_count;
+	//unsigned int nbRow=res->row_count;
 	FOURD_ELEMENT *elmt;
 	unsigned int indexElmt=0;	/*index of element in table <> numRow*nbCol + numCol */
 	//if(res->numRow>=nbRow)	//what can is do in this case...
@@ -186,7 +186,7 @@ FOURD_LONG * fourd_field_long(FOURD_RESULT *res,unsigned int numCol)
 	elmt=&(res->elmt[indexElmt]);
 	if(elmt->null==0)
 	{
-		FOURD_LONG x=*((int *)elmt->pValue);
+		//FOURD_LONG x=*((int *)elmt->pValue);
 		//printf("/////%d//////",x);
 		return (FOURD_LONG *)elmt->pValue;
 	}
@@ -195,7 +195,7 @@ FOURD_LONG * fourd_field_long(FOURD_RESULT *res,unsigned int numCol)
 FOURD_STRING * fourd_field_string(FOURD_RESULT *res,unsigned int numCol)
 {
 	int nbCol=res->row_type.nbColumn;
-	int nbRow=res->row_count;
+	//int nbRow=res->row_count;
 	unsigned int indexElmt=0;	/*index of element in table <> numRow*nbCol + numCol */
 	FOURD_ELEMENT *elmt=NULL;
 	//if(res->numRow>=nbRow)	//what can is do in this case...
@@ -236,7 +236,7 @@ void * fourd_field(FOURD_RESULT *res,unsigned int numCol)
 	}
 	return elmt->pValue;
 }
-int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,int *len)
+int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,unsigned long *len)
 {
 	unsigned int nbCol=res->row_type.nbColumn;
 	unsigned int nbRow=res->row_count;
@@ -329,6 +329,9 @@ int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,int
 			//Varying length
 			return 0;
 			break;
+		default:
+				return 0; //since this is what would happen if it just fell out of the switch statement anyway.
+				break;
 		}
 		return 0;
 	} 
@@ -338,7 +341,7 @@ int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,int
 const char * fourd_get_column_name(FOURD_RESULT *res,unsigned int numCol)
 {
 	unsigned int nbCol=res->row_type.nbColumn;
-	if(numCol>=nbCol  || numCol<0)
+	if(numCol>=nbCol)
 		return "";
 	if(res->row_type.Column==NULL)
 		return "";
@@ -348,7 +351,7 @@ FOURD_TYPE fourd_get_column_type(FOURD_RESULT *res,unsigned int numCol)
 {
 	unsigned int nbCol=res->row_type.nbColumn;
 	FOURD_TYPE type=VK_UNKNOW;
-	if(numCol>=nbCol  || numCol<0)
+	if(numCol>=nbCol)
 		return 0;
 	if(res->row_type.Column==NULL)
 		return 0;

@@ -56,13 +56,13 @@ static const short base64_reverse_table[256] = {
 
 /* {{{ php_base64_encode */
 //PHPAPI 
-unsigned char *base64_encode(const unsigned char *str, int length, int *ret_length)
+unsigned char *base64_encode(const char *str, size_t length, int *ret_length)
 {
-	const unsigned char *current = str;
+	const char *current = str;
 	unsigned char *p;
 	unsigned char *result;
 
-	if ((length + 2) < 0 || ((length + 2) / 3) >= (1 << (sizeof(int) * 8 - 2))) {
+	if (((length + 2) / 3) >= (1 << (sizeof(int) * 8 - 2))) {
 		if (ret_length != NULL) {
 			*ret_length = 0;
 		}
@@ -138,7 +138,7 @@ void php_base64_init(void)
 /* }}} */
 
 //PHPAPI 
-unsigned char *base64_decode(const unsigned char *str, int length, int *ret_length)
+unsigned char *base64_decode(const char *str, size_t length, int *ret_length)
 {
 	return base64_decode_ex(str, length, ret_length, 0);
 }
@@ -146,9 +146,9 @@ unsigned char *base64_decode(const unsigned char *str, int length, int *ret_leng
 /* {{{ php_base64_decode */
 /* as above, but backwards. :) */
 //PHPAPI 
-unsigned char *base64_decode_ex(const unsigned char *str, int length, int *ret_length, int strict)
+unsigned char *base64_decode_ex(const char *str, size_t length, int *ret_length, int strict)
 {
-	const unsigned char *current = str;
+	const char *current = str;
 	int ch, i = 0, j = 0, k;
 	/* this sucks for threaded environments */
 	unsigned char *result;

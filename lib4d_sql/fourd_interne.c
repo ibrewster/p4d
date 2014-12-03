@@ -63,14 +63,14 @@ void ZeroMemory (void *s, size_t n)
 {
 	bzero(s,n);
 }
-int sprintf_s(char *buff,int size,const char* format,...)
+int sprintf_s(char *buff,size_t size,const char* format,...)
 {
 	va_list ap;
 	va_start(ap,format);
 	vsnprintf(buff,size,format,ap);
 	return 0;
 }
-int _snprintf_s(char *buff, int size, int count, const char *format,...)
+int _snprintf_s(char *buff, size_t size, size_t count, const char *format,...)
 {
 	va_list ap;
 	va_start(ap,format);
@@ -89,7 +89,7 @@ int dblogin(FOURD *cnx,unsigned short int id_cnx,const char *user,const char*pwd
 {
 	char msg[2048];
 	FOURD_RESULT state;
-	char *user_b64=NULL,*pwd_b64=NULL;
+	unsigned char *user_b64=NULL,*pwd_b64=NULL;
 	int len;
 	_clear_atrr_cnx(cnx);
 #if __LOGIN_BASE64__
@@ -112,7 +112,7 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 {
 	char msg[MAX_HEADER_SIZE];
 	FOURD_RESULT *res;
-	char *request_b64;
+	unsigned char *request_b64;
 	int len;
 	Printf("---Debut de _query\n");
 	_clear_atrr_cnx(cnx);
@@ -165,7 +165,7 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 {
 	char msg[MAX_HEADER_SIZE];
 	FOURD_RESULT *res;
-	char *request_b64;
+	unsigned char *request_b64;
 	int len;
 	char sParam[MAX_HEADER_SIZE];
 	unsigned int i=0;
@@ -268,7 +268,7 @@ int _fetch_result(FOURD_RESULT *res,unsigned short int id_cmd)
 	FOURD *cnx=res->cnx;
 	FOURD_RESULT *nRes=NULL;
 	void *last_data=NULL;
-	int id_statement=res->id_statement;
+	//int id_statement=res->id_statement;
 	unsigned int first_row=res->first_row+res->row_count_sent;
 	unsigned int last_row=res->first_row+res->row_count_sent+99;
 	if(last_row>=res->row_count) {
@@ -380,11 +380,11 @@ int get(const char* msg,const char* section,char *valeur,int max_length)
 	//printf("La section %s contient '%s'\n",section,valeur);
 	if(strstr(section,"-Base64")!=NULL) {
 		//decode la valeur
-		char *valeur_decode=NULL;
+		unsigned char *valeur_decode=NULL;
 		int len_dec=0;
 		valeur_decode=base64_decode(valeur,strlen(valeur),&len_dec);
 		valeur_decode[len_dec]=0;
-		strncpy_s(valeur,max_length,valeur_decode,(size_t)len_dec);
+		strncpy_s(valeur,max_length,(const char*)valeur_decode,(size_t)len_dec);
 		valeur[len_dec]=0;
 		free(valeur_decode);
 	}
@@ -484,7 +484,7 @@ int traite_header_response(FOURD_RESULT* state)
 		char column_type[2048];
 		char *column=NULL;
 		unsigned int num=0;
-		char *context=NULL;
+		//char *context=NULL;
 		if(get(header,"Column-Types",column_type,2048)==0) {
 			Printf("Column-Types => '%s'\n",column_type);
 			column = strtok_s(column_type, " ",&context);
@@ -509,7 +509,7 @@ int traite_header_response(FOURD_RESULT* state)
 		char column_alias[2048];
 		char *alias=NULL;
 		unsigned int num=0;
-		char *context=NULL;
+		//char *context=NULL;
 		if(get(header,"Column-Aliases-Base64",column_alias,2048)==0) {
 			/* delete the last espace char if exist */
 			if(column_alias[strlen(column_alias)-1]==' ') {
@@ -659,13 +659,15 @@ void _free_data_result(FOURD_RESULT *res)
 			case VK_IMAGE:
 				Printferr("Image-Type not supported\n");
 				break;
+			default:
+				break;
 		}
 	}
 }
 void *_copy(FOURD_TYPE type,void *org)
 {
 	void *buff=NULL;
-	int size=0;
+	//int size=0;
 	if(org!=NULL)
 	{
 		switch(type) {
@@ -719,11 +721,13 @@ void *_copy(FOURD_TYPE type,void *org)
 			case VK_IMAGE:
 				Printferr("Image-Type not supported\n");
 				break;
+			default:
+				break;
 		}
 	}
 	return buff;
 }
-char *_serialize(char *data,int *size, FOURD_TYPE type, void *pObj)
+char *_serialize(char *data,unsigned int *size, FOURD_TYPE type, void *pObj)
 {
 	int lSize=0;
 	if(pObj!=NULL) {
@@ -790,6 +794,8 @@ char *_serialize(char *data,int *size, FOURD_TYPE type, void *pObj)
 			case VK_IMAGE:
 				Printferr("Image-Type not supported\n");
 				break;
+			default:
+				break;
 		}
 	}
 	return data;
@@ -834,7 +840,7 @@ void PrintData(const void *data,unsigned int size)
 int _is_multi_query(const char *request)
 {
 	int i=0;
-	int len;
+	size_t len;
 	int inCol=0;
 	int inStr=0;
 	int finFirst=0;

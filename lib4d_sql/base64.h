@@ -25,11 +25,11 @@
 //PHP_FUNCTION(base64_encode);
 
 //PHPAPI extern 
-unsigned char *base64_encode(const unsigned char *, int, int *);
+unsigned char *base64_encode(const char *, size_t, int *);
 //PHPAPI extern 
-unsigned char *base64_decode_ex(const unsigned char *, int, int *, int);
+unsigned char *base64_decode_ex(const char *, size_t, int *, int);
 //PHPAPI extern 
-unsigned char *base64_decode(const unsigned char *, int, int *);
+unsigned char *base64_decode(const char *, size_t, int *);
 
 #endif /* BASE64_H */
 

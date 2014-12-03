@@ -38,10 +38,10 @@
 #include <fcntl.h>
 #endif
 
-int frecv(SOCKET s,char *buf,int len,int flags)  
+long frecv(SOCKET s,unsigned char *buf,int len,int flags)
 {
 	int rec=0;
-	int iResult=0;
+	long iResult=0;
 	do{
 		iResult=recv(s,buf+rec,len-rec, 0);
 		if(iResult<0){
@@ -142,7 +142,6 @@ int socket_connect(FOURD *cnx,const char *host,unsigned int port)
 
 void socket_disconnect(FOURD *cnx)
 {
-	int iResult=0;
 	// shutdown the send half of the connection since no more data will be sent
 	#ifdef WIN32
 	iResult = shutdown(cnx->socket, SD_SEND);
@@ -157,9 +156,10 @@ void socket_disconnect(FOURD *cnx)
 	cnx->connected=0;
 	//Printf("Disconnect ok\n");
 }
+
 int socket_send(FOURD *cnx,const char*msg)
 {
-	int iResult;
+	long iResult;
 	//Printf("Send-len:%d\n",strlen(msg))
 	Printf("Send:\n%s",msg);
 	// Send an initial buffer
@@ -173,7 +173,7 @@ int socket_send(FOURD *cnx,const char*msg)
 }
 int socket_send_data(FOURD *cnx,const char*msg,int len)
 {
-	int iResult;
+	long iResult;
 	Printf("Send:%d bytes\n",len);
 	PrintData(msg,len);
 	Printf("\n");
@@ -189,11 +189,10 @@ int socket_send_data(FOURD *cnx,const char*msg,int len)
 
 int socket_receiv_header(FOURD *cnx,FOURD_RESULT *state)
 {
-	int iResult=0;
+	long iResult=0;
 	int offset=0;
 	int len=0;
 	int crlf=0;
-	char *fin_header=NULL;
 	//read the HEADER only
 	do 
 	{
@@ -225,17 +224,16 @@ int socket_receiv_header(FOURD *cnx,FOURD_RESULT *state)
 }
 int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 {
-	int iResult=0;
-	int offset=0;
+	long iResult=0;
 	int len=0;
-	int end_row=0;
+	//int end_row=0;
 	unsigned int nbCol=state->row_type.nbColumn;
 	unsigned int nbRow=state->row_count_sent;
 	unsigned int r,c;
 	FOURD_TYPE *colType;
 	FOURD_ELEMENT *pElmt=NULL;
-	char status_code=0;
-	int elmt_size=0;
+	unsigned char status_code=0;
+	//int elmt_size=0;
 	int elmts_offset=0;
 	Printf("---Debut de socket_receiv_data\n");
 	colType=calloc(nbCol,sizeof(FOURD_TYPE));
@@ -266,13 +264,13 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 				break;
 			case '1':
 				/* pElmt->elmt=calloc(vk_sizeof(colType[0]),1); */
-				iResult = frecv(cnx->socket,(char*)&row_id,sizeof(row_id), 0);
+				iResult = frecv(cnx->socket,(unsigned char*)&row_id,sizeof(row_id), 0);
 				/* Printf("row_id:%d\n",row_id); */
 				len+=iResult;
 				break;
 			case '2':
 				Printferr("Error during reading data\n");
-				iResult = frecv(cnx->socket,(char*)&(state->error_code),sizeof(state->error_code), 0);
+				iResult = frecv(cnx->socket,(unsigned char*)&(state->error_code),sizeof(state->error_code), 0);
 				len+=iResult;
 				return 1;	/* return on error */
 				break;
@@ -299,7 +297,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 			{
 			case '2'://error
 				Printferr("Error during reading data\n");
-				iResult = frecv(cnx->socket,(char*)&(state->error_code),sizeof(state->error_code), 0);
+				iResult = frecv(cnx->socket,(unsigned char*)&(state->error_code),sizeof(state->error_code), 0);
 				len+=iResult;
 				return 1;//on sort en erreur
 				break;
@@ -328,7 +326,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 						FOURD_TIMESTAMP *tmp;
 						tmp=calloc(1,sizeof(FOURD_TIMESTAMP));
 						pElmt->pValue=tmp;
-						iResult = frecv(cnx->socket,(char*)&(tmp->year),sizeof(short), 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&(tmp->year),sizeof(short), 0);
 						Printf("year: %04X",tmp->year);
 						len+=iResult;
 						iResult = frecv(cnx->socket,&(tmp->mounth),sizeof(char), 0);
@@ -337,7 +335,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 						iResult = frecv(cnx->socket,&(tmp->day),sizeof(char), 0);
 						Printf("    day: %02X",tmp->day);
 						len+=iResult;
-						iResult = frecv(cnx->socket,(char*)&(tmp->milli),sizeof(unsigned int), 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&(tmp->milli),sizeof(unsigned int), 0);
 						Printf("    milli: %08X\n",tmp->milli);
 						len+=iResult;
 					}
@@ -349,11 +347,11 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 						tmp=calloc(1,sizeof(FOURD_FLOAT));
 						pElmt->pValue=tmp;
 
-						iResult = frecv(cnx->socket,(char*)&(tmp->exp),sizeof(int), 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&(tmp->exp),sizeof(int), 0);
 						len+=iResult;
 						iResult = frecv(cnx->socket,&(tmp->sign),sizeof(char), 0);
 						len+=iResult;
-						iResult = frecv(cnx->socket,(char*)&(tmp->data_length),sizeof(int), 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&(tmp->data_length),sizeof(int), 0);
 						len+=iResult;
 						iResult = frecv(cnx->socket,(tmp->data),tmp->data_length, 0);
 						len+=iResult;
@@ -368,7 +366,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 						//read negative value of length of string
 						str=calloc(1,sizeof(FOURD_STRING));
 						pElmt->pValue=str;					
-						iResult = frecv(cnx->socket,(char*)&data_length,4, 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&data_length,4, 0);
 						len+=iResult;
 						Printf("String length: %08X\n",data_length);
 						data_length=-data_length;
@@ -404,7 +402,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 						//read negative value of length of string
 						blob=calloc(1,sizeof(FOURD_BLOB));
 						pElmt->pValue=blob;
-						iResult = frecv(cnx->socket,(char*)&data_length,4, 0);
+						iResult = frecv(cnx->socket,(unsigned char*)&data_length,4, 0);
 						Printf("Blob length: %08X\n",data_length);
 						len+=iResult;
 						if(data_length==0){
@@ -438,9 +436,9 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 int socket_receiv_update_count(FOURD *cnx,FOURD_RESULT *state)
 {
 	FOURD_LONG8 data=0;
-	int iResult=0;
+	long iResult=0;
 	int len=0;
-	iResult = frecv(cnx->socket,(char*)&data,8, 0);
+	iResult = frecv(cnx->socket,(unsigned char*)&data,8, 0);
 	len+=iResult;
 	Printf("Ox%X\n",data);
 	cnx->updated_row=data;
@@ -495,7 +493,7 @@ int socket_connect_timeout(FOURD *cnx,const char *host,unsigned int port,int tim
 	fd_set myset; 
 	socklen_t lon;
 	
-	int nbTryConnect=0;
+	//int nbTryConnect=0;
 	char sport[50];
 	sprintf_s(sport,50,"%d",port);
 

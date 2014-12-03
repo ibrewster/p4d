@@ -137,8 +137,12 @@ int vk_sizeof(FOURD_TYPE type)
 		//Varying length
 		return -1;
 		break;
+	default:
+			Printf("Error: Unknow type in vk_sizeof function\n");
+			return 0;
+			break;
 	}
-	//error type not found
+	//error type not found. Should now be handled by the default switch case
 	Printf("Error: Unknow type in vk_sizeof function\n");
 	return 0;
 }
@@ -161,6 +165,9 @@ const char* stringFromResultType(FOURD_RESULT_TYPE type)
 	case RESULT_SET:
 		return "Result-Set";
 		break;
+	default:
+			return "Unknown";
+			break;
 	}
-	return "Unknow";
+	return "Unknown";
 }

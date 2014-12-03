@@ -38,7 +38,7 @@ setup(
     },
     author="Israel Brewster",
     author_email="israel@brewstersoft.com",
-    url="http://www.brewstersoft.com",
+    url="https://github.com/ibrewster/p4d",
 
     description="Python DBI module for the 4D database",
     long_description="This module provides a Python Database API v2.0 compliant driver for the 4D (4th Dimension, http://www.4d.com ) database. Based off of C library code provided by 4th Dimension and implemented using CFFI",

@@ -151,7 +151,9 @@ class py4d_cursor(object):
     """"""
     arraysize = 1
     pagesize = 100
+
     __resulttype = None
+    __prepared = False
 
     @property
     def rownumber(self):
@@ -236,9 +238,10 @@ class py4d_cursor(object):
             if not foundtuple:
                 break
 
-        fourd_query = lib4d_sql.fourd_prepare_statement(self.fourdconn, query)
+        if self.__prepared == False:  #Should always be false, unless we are running an executemany
+            self.fourd_query = lib4d_sql.fourd_prepare_statement(self.fourdconn, query)
 
-        if fourd_query == ffi.NULL:
+        if self.fourd_query == ffi.NULL:
             error = ffi.string(lib4d_sql.fourd_error(self.fourdconn))
             raise ProgrammingError(error)
 
@@ -284,12 +287,12 @@ class py4d_cursor(object):
                 param.data = ffi.new("char[]", itemstr.encode('UTF-16LE'))
 
 
-            bound = lib4d_sql.fourd_bind_param(fourd_query, idx, fourd_type, param)
+            bound = lib4d_sql.fourd_bind_param(self.fourd_query, idx, fourd_type, param)
             if bound != 0:
                 raise ProgrammingError(ffi.string(lib4d_sql.fourd_error(self.fourdconn)))
 
         # Run the query and return the results
-        self.result = lib4d_sql.fourd_exec_statement(fourd_query, self.pagesize)
+        self.result = lib4d_sql.fourd_exec_statement(self.fourd_query, self.pagesize)
 
         if self.result == ffi.NULL:
             raise ProgrammingError(ffi.string(lib4d_sql.fourd_error(self.fourdconn)))
@@ -350,9 +353,11 @@ class py4d_cursor(object):
         """"""
         for paramlist in params:
             self.execute(query, paramlist, describe=False)
+            self.__prepared = True
 
         #we don't run describe on the individual queries in order to be more efficent.
         self.__describe()
+        self.__prepared = False
 
     #----------------------------------------------------------------------
     def fetchone(self):
@@ -578,10 +583,11 @@ if __name__ == "__main__":
     dbCursor = dbconn.cursor()
 
     from datetime import date, time
+    DATA = None
 
     SQL = ""
 
-    dbCursor.execute(SQL)
+    dbCursor.executemany(SQL, DATA)
 
     print "Rows Returned:", dbCursor.rowcount
     rows = dbCursor.fetchall()

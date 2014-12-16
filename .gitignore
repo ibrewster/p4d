@@ -1,3 +1,4 @@
+testODBC.py
 *.xcodeproj
 .DS_Store
 __pycache__

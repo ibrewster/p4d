@@ -150,7 +150,7 @@ class Binary(str):
 class py4d_cursor(object):
     """"""
     arraysize = 1
-    pagesize = 100000
+    pagesize = 100
     __resulttype = None
 
     @property
@@ -568,19 +568,19 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
 
 
 if __name__ == "__main__":
-    dbconn = connect(user="GateKeeper", password="77leen77", host="10.9.1.11",
-                    database="FlightMasterV11")
+    import time as clocktime
+
+    starttime = clocktime.time()
+    dbconn = connect(user="", password="", host="",
+                    database="")
 
     dbCursor = dbconn.cursor()
 
     from datetime import date, time
 
-    data = [(u'808-6693038', u'687555', u'Out', u'ERAAWB|808-6693038|687555|swap for pc|2|7', u'ijb', u'FAI', u'Freight'), (u'808-6693038', u'687555', u'Out', u'ERAAWB|808-6693038|687555|swap for pc|2|7', u'ijb', u'FAI', u'Freight')]
+    SQL = ""
 
-    insertSQL = """INSERT INTO Freight_Items_Scanned (AirwayBill_Num, Freight_ItemsID,ScanType,Barcode,Receiving_Agent,Location,TagType) VALUES (?,?,?,?,?,?,?)"""
-
-
-    dbCursor.executemany(insertSQL, data)
+    dbCursor.execute(SQL)
 
     print "Rows Returned:", dbCursor.rowcount
     rows = dbCursor.fetchall()
@@ -589,3 +589,6 @@ if __name__ == "__main__":
         print row
 
     dbconn.close()
+
+    endtime = clocktime.time()
+    print "Function completed in:", (endtime - starttime) * 1000, "ms"

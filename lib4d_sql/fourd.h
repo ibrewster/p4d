@@ -241,7 +241,7 @@ typedef struct{
 
 typedef struct {
 	FOURD *cnx;
-	char query[MAX_HEADER_SIZE];	/*MAX_HEADER_SIZE is using because the query is insert into header*/
+	char *query;	/*MAX_HEADER_SIZE is using because the query is insert into header*/
 	unsigned int nb_element;
 	unsigned int nbAllocElement;
 	FOURD_ELEMENT *elmt;

@@ -110,7 +110,7 @@ int dblogin(FOURD *cnx,unsigned short int id_cnx,const char *user,const char*pwd
 //return 0 if ok 1 if error
 int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT *result,const char*image_type, int res_size)
 {
-	char msg[MAX_HEADER_SIZE];
+	char *msg;
 	FOURD_RESULT *res;
 	unsigned char *request_b64;
 	int len;
@@ -125,13 +125,24 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 		res=calloc(1,sizeof(FOURD_RESULT));
 #if __STATEMENT_BASE64__
 	request_b64=base64_encode(request,strlen(request),&len);
-	sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request_b64,"release",res_size,image_type);
+	char *format_str="%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n";
+	unsigned long buff_size=strlen(format_str)+strlen((const char *)request_b64)+42; //add some extra for the additional arguments and a bit more for good measure.
+	msg=(char *)malloc(buff_size);
+	snprintf(msg,buff_size,format_str,id_cmd,request_b64,"release",res_size,image_type);
+	
+	//sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request_b64,"release",res_size,image_type);
 	free(request_b64);
 #else
-	sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request,"release",res_size,image_type);
+	char *format_str="%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n";
+	unsigned long buff_size=strlen(format_str)+strlen(request)+42; //add some extra for the additional arguments and a bit more for good measure.
+	msg=(char *)malloc(buff_size);
+	snprintf(msg, buff_size,format_str,id_cmd,request,"release",res_size,image_type);
+	//sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request,"release",res_size,image_type);
 #endif
 	cnx->updated_row=-1;
 	socket_send(cnx,msg);
+	free(msg);
+	
 	if(receiv_check(cnx,res)!=0)
 		return 1;
 
@@ -161,6 +172,7 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 	Printf("---Fin de _query\n");
 	return 0;
 }
+
 int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsigned int nbParam, const FOURD_ELEMENT *param,FOURD_RESULT *result,const char*image_type,int res_size)
 {
 	char msg[MAX_HEADER_SIZE];

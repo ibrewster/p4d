@@ -409,7 +409,7 @@ FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query)
 		case UPDATE_COUNT:
 			//get Update-count: Nb row updated
 			cnx->updated_row=-1;
-			socket_receiv_update_count(cnx,res);
+			//socket_receiv_update_count(cnx,res);
 			_free_data_result(res);
 			break;
 		case RESULT_SET:

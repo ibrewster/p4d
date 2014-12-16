@@ -126,19 +126,17 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 #if __STATEMENT_BASE64__
 	request_b64=base64_encode(request,strlen(request),&len);
 	char *format_str="%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n";
-	unsigned long buff_size=strlen(format_str)+strlen((const char *)request_b64)+42; //add some extra for the additional arguments and a bit more for good measure.
+	size_t buff_size=strlen(format_str)+strlen((const char *)request_b64)+42; //add some extra for the additional arguments and a bit more for good measure.
 	msg=(char *)malloc(buff_size);
 	snprintf(msg,buff_size,format_str,id_cmd,request_b64,"release",res_size,image_type);
-	
-	//sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request_b64,"release",res_size,image_type);
 	free(request_b64);
 #else
 	char *format_str="%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n";
-	unsigned long buff_size=strlen(format_str)+strlen(request)+42; //add some extra for the additional arguments and a bit more for good measure.
+	size_t buff_size=strlen(format_str)+strlen(request)+42; //add some extra for the additional arguments and a bit more for good measure.
 	msg=(char *)malloc(buff_size);
 	snprintf(msg, buff_size,format_str,id_cmd,request,"release",res_size,image_type);
-	//sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n",id_cmd,request,"release",res_size,image_type);
 #endif
+
 	cnx->updated_row=-1;
 	socket_send(cnx,msg);
 	free(msg);
@@ -175,16 +173,16 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 
 int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsigned int nbParam, const FOURD_ELEMENT *param,FOURD_RESULT *result,const char*image_type,int res_size)
 {
-	char msg[MAX_HEADER_SIZE];
+	char *msg=NULL;
 	FOURD_RESULT *res;
-	unsigned char *request_b64;
+	unsigned char *request_b64=NULL;
 	int len;
-	char sParam[MAX_HEADER_SIZE];
+	char *sParam=NULL;
 	unsigned int i=0;
 	char *data=NULL;
 	unsigned int data_len=0;
 	unsigned int size=0;
-	Printf("---Debut de _query_param\n");
+	//Printf("---Debut de _query_param\n");
 	if(!_valid_query(cnx,request)) {
 		return 1;
 	}
@@ -199,12 +197,15 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 	
 
 	/* construct param list */
-	sprintf_s(sParam,MAX_HEADER_SIZE-1,"");
+	size_t paramlen=(nbParam+1)*13; //the longest type name is 12 characters, and we add a space between each parameter.
+									// add a 1 to the number of parameters because I am paranoid.
+	
+	sParam=calloc(paramlen, sizeof(char)); //initalized to zero, so we should be able to call strlen() on it without problem
+	
 	for(i=0;i<nbParam;i++) {
-		sprintf_s(sParam+strlen(sParam),MAX_HEADER_SIZE-1-strlen(sParam)," %s",stringFromType(param[i].type));
-	}
-	/* construct data */
-	for(i=0;i<nbParam;i++) {
+		snprintf(sParam+strlen(sParam),paramlen-1-strlen(sParam)," %s",stringFromType(param[i].type));
+		
+		/* construct data */
 		if(param[i].null==0) {
 			data=realloc(data,++size);
 			memset(data+(size-1),'1',1);
@@ -215,18 +216,27 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 			memset(data+(size-1),'0',1);
 		}
 	}
+
 	data_len=size;
 	/* construct Header */
 #if __STATEMENT_BASE64__
 	request_b64=base64_encode(request,strlen(request),&len);
-	sprintf_s(msg,2048,"%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\nPARAMETER-TYPES:%s\r\n\r\n",id_cmd,request_b64,"release",res_size,image_type,sParam);
+	char *msg_format="%03d EXECUTE-STATEMENT\r\nSTATEMENT-BASE64:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\nPARAMETER-TYPES:%s\r\n\r\n";
+	size_t msg_length=strlen((const char *)request_b64)+strlen(msg_format)+strlen(image_type)+strlen(sParam)+20;
+	msg=malloc(msg_length);
+	snprintf(msg,msg_length,msg_format,id_cmd,request_b64,"release",res_size,image_type,sParam);
 	free(request_b64);
 #else
-	sprintf_s(msg,MAX_HEADER_SIZE-1,"%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\nPARAMETER-TYPES:%s\r\n\r\n",id_cmd,request,"release",res_size,image_type,sParam);
+	char *msg_format="%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\nPARAMETER-TYPES:%s\r\n\r\n";
+	size_t msg_length=strlen(request)+strlen(msg_format)+strlen(image_type)+strlen(sParam)+20;
+	msg=malloc(msg_length);
+	snprintf(msg,msg_length,msg_format,id_cmd,request,"release",res_size,image_type,sParam);
 #endif
 	
+	free(sParam);
 
 	socket_send(cnx,msg);
+	free(msg);
 	socket_send_data(cnx,data,data_len);
 	if(receiv_check(cnx,res)!=0)
 		return 1;
@@ -294,6 +304,7 @@ int _fetch_result(FOURD_RESULT *res,unsigned short int id_cmd)
 	nRes->row_count_sent=last_row-first_row+1;
 	nRes->cnx=res->cnx;
 	nRes->row_type=res->row_type;
+	nRes->updateability=res->updateability;
 	/*get new Result set in new FOURD_RESULT*/
 	if(__fetch_result(cnx,123,res->id_statement,0,first_row,last_row,nRes)){
 		return 1;
@@ -577,7 +588,7 @@ int traite_header_response(FOURD_RESULT* state)
 	//Column-Updateability
 	{
 		char updateability[250];
-		state->updateability=1;
+		//state->updateability=1;
 		if(get(header,"Column-Updateability",updateability,250)==0) {
 			state->updateability=(strstr(updateability,"Y")!=NULL);
 			Printf("Column-Updateability:%s\n",updateability);

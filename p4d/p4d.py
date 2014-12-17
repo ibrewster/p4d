@@ -574,38 +574,3 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
     # Try to connect to the database
     fourd_connection = py4d_connection(**connect_args)
     return fourd_connection
-
-
-if __name__ == "__main__":
-    # Testing code. Execute arbitrary queries agains the server and print/time the results
-    import time as clocktime
-
-    dbconn = connect(user="GateKeeper", password="77leen77", host="10.9.1.59",
-                    database="FlightMasterV11")
-
-    dbCursor = dbconn.cursor()
-
-    from datetime import date, time
-    #generate a bunch of (not so) random data
-    DATA = []
-    for _ in range(500):
-        DATA.append([u'N404GV', '11/17/2014 18:05:53', date(2014, 11, 17), time(9, 5, 53), '20141117180553', '64.81824', '-147.86583', 300, 347.0, 0, u'Py_Exelis_Position'])
-
-    starttime = clocktime.time()
-
-    SQL = "INSERT INTO AirData (RecordID,Aircraft,EventDTG,Date_Received,Time_Received,ConvertedDTG,Latitude,Longitude,Altitude,heading,speed,SourceMethod,event_type) VALUES ({ fn Special_ID_Assign_Num_SQLFn('AirData') AS NUMERIC },?,?,?,?,?,?,?,?,?,?,?,'POS')"
-
-    dbCursor.executemany(SQL, DATA)
-
-    print "Rows Returned:", dbCursor.rowcount
-    rows = dbCursor.fetchall()
-    print "Rows fetched:", len(rows)
-    endtime = clocktime.time()
-
-    for idx, row in enumerate(rows):
-        if idx < 5:
-            print row
-
-    dbconn.close()
-
-    print "Function completed in:", (endtime - starttime) * 1000, "ms"

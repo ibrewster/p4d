@@ -2,6 +2,9 @@ p4d is a Python Database API 2.0 compliant driver for the 4D (4th Dimension) dat
 
 NOTE: Due to an apparent bug in the C code provided by 4D, or the 4D server itself, only the first "page" of results can be retrieved. To work around this limitation, I have added a "page size" property to the cursor class. Set this a number larger than the maximum number of results you are expecting from the query, and it should work fine. Note, however, that while I have tested this with the value set high (100,000), the largest query I have tested with only returned around 14,000 rows. It is possible that larger result sets could cause issues, either with the server or with the C driver code.
 
+v0.3 2014-12-17:
+ - improve performance of module when receiving large datasets containing date/time values.
+
 v0.2 2014-12-16:
  - Fixed lib4d_sql bug preventing proper paging for some queries
  - Fixed lib4d_sql bug preventing use of "long" queries or argument strings

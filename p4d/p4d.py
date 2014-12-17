@@ -410,7 +410,11 @@ class py4d_cursor(object):
                     dateval = None
                 else:
                     try:
-                        dateval = parser.parse(output)
+                        dateval = datetime(int(output[:4]), int(output[5:7]),
+                                           int(output[8:10]), int(output[11:13]),
+                                           int(output[14:16]), int(output[17:19]),
+                                           int(output[20:23])*1000)
+                        #dateval = parser.parse(output)
                     except:
                         dateval = None
                 row.append(dateval)
@@ -576,26 +580,32 @@ if __name__ == "__main__":
     # Testing code. Execute arbitrary queries agains the server and print/time the results
     import time as clocktime
 
-    starttime = clocktime.time()
-    dbconn = connect(user="", password="", host="",
-                    database="")
+    dbconn = connect(user="GateKeeper", password="77leen77", host="10.9.1.59",
+                    database="FlightMasterV11")
 
     dbCursor = dbconn.cursor()
 
     from datetime import date, time
-    DATA = None
+    #generate a bunch of (not so) random data
+    DATA = []
+    for _ in range(500):
+        DATA.append([u'N404GV', '11/17/2014 18:05:53', date(2014, 11, 17), time(9, 5, 53), '20141117180553', '64.81824', '-147.86583', 300, 347.0, 0, u'Py_Exelis_Position'])
 
-    SQL = ""
+    starttime = clocktime.time()
+
+    SQL = "INSERT INTO AirData (RecordID,Aircraft,EventDTG,Date_Received,Time_Received,ConvertedDTG,Latitude,Longitude,Altitude,heading,speed,SourceMethod,event_type) VALUES ({ fn Special_ID_Assign_Num_SQLFn('AirData') AS NUMERIC },?,?,?,?,?,?,?,?,?,?,?,'POS')"
 
     dbCursor.executemany(SQL, DATA)
 
     print "Rows Returned:", dbCursor.rowcount
     rows = dbCursor.fetchall()
     print "Rows fetched:", len(rows)
-    for row in rows:
-        print row
+    endtime = clocktime.time()
+
+    for idx, row in enumerate(rows):
+        if idx < 5:
+            print row
 
     dbconn.close()
 
-    endtime = clocktime.time()
     print "Function completed in:", (endtime - starttime) * 1000, "ms"

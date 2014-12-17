@@ -26,7 +26,7 @@ class CFFIInstall(install):
 setup(
     zip_safe=False,
     name="p4d",
-    version="0.3",
+    version="0.3.2",
     install_requires=["cffi", ],
     setup_requires=['cffi', ],
     packages=find_packages(),

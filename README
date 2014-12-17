@@ -4,6 +4,8 @@ NOTE: Due to an apparent bug in the C code provided by 4D, or the 4D server itse
 
 v0.3 2014-12-17:
  - improve performance of module when receiving large datasets containing date/time values.
+ - Close statement after execution when doing an insert many
+ - Fix potential issue when doing large "execute many" queries
 
 v0.2 2014-12-16:
  - Fixed lib4d_sql bug preventing proper paging for some queries

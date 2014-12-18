@@ -536,6 +536,11 @@ int socket_connect_timeout(FOURD *cnx,const char *host,unsigned int port,int tim
 		freeaddrinfo(result);
 		return 1;
 	}
+	int flag=1;
+	// if we get an error here, we can safely ignore it. The connection may be slower, but it should
+	// still work.
+	setsockopt(cnx->socket, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
+	
 	/* Printf("Socket Ok\n"); */
 	/*set Non blocking socket */
 	set_sock_blocking(cnx->socket,0);

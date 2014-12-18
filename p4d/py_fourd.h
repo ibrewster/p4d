@@ -155,6 +155,7 @@ FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query);
 int fourd_bind_param(FOURD_STATEMENT *state,unsigned int numParam,FOURD_TYPE type, void *val);
 FOURD_RESULT *fourd_exec_statement(FOURD_STATEMENT *state, int res_size);
 int fourd_close_statement(FOURD_RESULT *res);
+void fourd_free_result(FOURD_RESULT *res);
 
 int fourd_next_row(FOURD_RESULT *res);
 void * fourd_field(FOURD_RESULT *res,unsigned int numCol);

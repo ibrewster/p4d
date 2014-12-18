@@ -192,6 +192,8 @@ class py4d_cursor(object):
     #----------------------------------------------------------------------
     def close(self):
         """Close the database connection"""
+        if self.result is not None:
+            self.lib4d_sql.fourd_free_result(self.result)
         self.connection.close()
         self.__description = None
         self.__rowcount = -1
@@ -353,7 +355,9 @@ class py4d_cursor(object):
         """"""
         for paramlist in params:
             self.execute(query, paramlist, describe=False)
-            self.lib4d_sql.fourd_close_statement(self.result)
+            self.lib4d_sql.fourd_close_statement(self.result)  #close the statement
+            # and free any memory used
+            self.lib4d_sql.fourd_free_result(self.result)
             self.__prepared = True
 
         #we don't run describe on the individual queries in order to be more efficent.

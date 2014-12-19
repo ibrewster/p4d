@@ -1,9 +1,8 @@
 p4d is a Python Database API 2.0 compliant driver for the 4D (4th Dimension) database server. As such, usage should be familiar to anyone who has used any python database modules before. This module is based off of a C library provided by 4D, and integrated with Python using CFFI. As such, installation of this module does require CFFI.
 
-NOTE: Due to an apparent bug in the C code provided by 4D, or the 4D server itself, only the first "page" of results can be retrieved. To work around this limitation, I have added a "page size" property to the cursor class. Set this a number larger than the maximum number of results you are expecting from the query, and it should work fine. Note, however, that while I have tested this with the value set high (100,000), the largest query I have tested with only returned around 14,000 rows. It is possible that larger result sets could cause issues, either with the server or with the C driver code.
 v0.4 2014-12-18:
  - Fix memory leak when doing an execute many call (there may still be a small leak with individual executes, depending on how CFFI handles memory)
- - Fix performace issue when performing large executemany queries
+ - Fix performance issue when performing large executemany queries
 
 v0.3 2014-12-17:
  - improve performance of module when receiving large datasets containing date/time values.

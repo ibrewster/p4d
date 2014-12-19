@@ -171,6 +171,53 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 	return 0;
 }
 
+int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request){
+	char *msg;
+	FOURD_RESULT *res=calloc(1,sizeof(FOURD_RESULT));
+	int len;
+	
+#if __STATEMENT_BASE64__
+	unsigned char *request_b64;
+	request_b64=base64_encode(request,strlen(request),&len);
+	char *format_str="%03d PREPARE-STATEMENT\r\nSTATEMENT-BASE64: %s\r\n\r\n";
+	unsigned long buff_size=strlen(format_str)+strlen((const char *)request_b64)+2; //add some extra for good measure.
+	msg=(char *)malloc(buff_size);
+	snprintf(msg,buff_size,format_str,id_cmd,request_b64);
+	free(request_b64);
+#else
+	char *format_str="%03d PREPARE-STATEMENT\r\nSTATEMENT: %s\r\n\r\n";
+	unsigned long buff_size=strlen(format_str)+strlen(request)+2; //add some extra for good measure.
+	msg=(char *)malloc(buff_size);
+	snprintf(msg,buff_size,format_str,id_cmd,request_b64);
+#endif
+	
+	cnx->updated_row=-1;
+	socket_send(cnx,msg);
+	free(msg);
+	
+	if(receiv_check(cnx,res)!=0)
+		return 1;
+	
+	switch(res->resultType)	{
+		case UPDATE_COUNT:
+			//get Update-count: Nb row updated
+			cnx->updated_row=-1;
+			//socket_receiv_update_count(cnx,res);
+			_free_data_result(res);
+			break;
+		case RESULT_SET:
+			//get data
+			socket_receiv_data(cnx,res);
+			cnx->updated_row=-1;
+			break;
+		default:
+			Printferr("Error: Result-Type not supported in query");
+	}
+	free(res);
+
+	return 0;
+}
+
 int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsigned int nbParam, const FOURD_ELEMENT *param,FOURD_RESULT *result,const char*image_type,int res_size)
 {
 	char *msg=NULL;
@@ -264,6 +311,7 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 		Free(res);
 	return 0;
 }
+
 /* low level commande 
    command_index and statement_id is identify by result of execute statement commande */
 int __fetch_result(FOURD *cnx,unsigned short int id_cmd,int statement_id,int command_index,unsigned int first_row,unsigned int last_row,FOURD_RESULT *result)

@@ -70,6 +70,7 @@ void _free_data_result(FOURD_RESULT *res);
 void _clear_atrr_cnx(FOURD *cnx);
 int close_statement(FOURD_RESULT *res,unsigned short int id_cmd);
 
+int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request);
 int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsigned int nbParam, const FOURD_ELEMENT *param,FOURD_RESULT *result,const char*image_type, int res_size);
 int _is_multi_query(const char *request);
 int _valid_query(FOURD *cnx,const char *request);

@@ -213,7 +213,7 @@ int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request)
 		default:
 			Printferr("Error: Result-Type not supported in query");
 	}
-	free(res);
+	fourd_free_result(res);
 
 	return 0;
 }
@@ -705,6 +705,7 @@ void _free_data_result(FOURD_RESULT *res)
 	unsigned int nbElmt=nbCol*nbRow;
 	unsigned int i=0;
 	FOURD_ELEMENT *pElmt=res->elmt;
+	FOURD_ELEMENT *pElmtOrig=pElmt;
 	if(pElmt==NULL) {
 		return;
 	}
@@ -734,6 +735,8 @@ void _free_data_result(FOURD_RESULT *res)
 				break;
 		}
 	}
+	
+	free(pElmtOrig);
 }
 void *_copy(FOURD_TYPE type,void *org)
 {

@@ -431,6 +431,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 		}
 	}
 	Printf("---Fin de socket_receiv_data\n");
+	free(colType);
 	return 0;
 }
 int socket_receiv_update_count(FOURD *cnx,FOURD_RESULT *state)

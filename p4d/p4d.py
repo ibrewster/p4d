@@ -184,6 +184,8 @@ class py4d_cursor(object):
         self.__rowcount = -1
         self.__description = None
         self.__rownumber = None
+        self.result = None
+        self.fourd_query = None
 
         self.fourdconn = fourdconn
         self.connection = connection
@@ -293,6 +295,10 @@ class py4d_cursor(object):
             if bound != 0:
                 raise ProgrammingError(ffi.string(self.lib4d_sql.fourd_error(self.fourdconn)))
 
+        #properly clean up any old results
+        if self.result is not None and self.result != ffi.NULL:
+            self.lib4d_sql.fourd_free_result(self.result)
+
         # Run the query and return the results
         self.result = self.lib4d_sql.fourd_exec_statement(self.fourd_query, self.pagesize)
 
@@ -354,14 +360,21 @@ class py4d_cursor(object):
     def executemany(self, query, params):
         """"""
         for paramlist in params:
+            #free any memory used in the last pass.
+            if self.result is not None and self.result != ffi.NULL:
+                self.lib4d_sql.fourd_free_result(self.result)
+                self.result = None
+
             self.execute(query, paramlist, describe=False)
             self.lib4d_sql.fourd_close_statement(self.result)  #close the statement
-            # and free any memory used
-            self.lib4d_sql.fourd_free_result(self.result)
             self.__prepared = True
 
         #we don't run describe on the individual queries in order to be more efficent.
         self.__describe()
+
+        #finally free any remaining memory used.
+        self.lib4d_sql.fourd_free_result(self.result)
+        self.result = None
         self.__prepared = False
 
     #----------------------------------------------------------------------
@@ -387,8 +400,8 @@ class py4d_cursor(object):
         self.__rownumber = self.result.numRow
 
         numcols = self.lib4d_sql.fourd_num_columns(self.result);
-        inbuff = ffi.new("char*[1024]")
         strlen = ffi.new("size_t*")
+        inbuff = ffi.new("char*[1]")
 
         row=[]
         for col in range(numcols):
@@ -398,7 +411,9 @@ class py4d_cursor(object):
                         continue
 
             self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
-            output = str(ffi.buffer(inbuff[0], strlen[0])[:])
+            strdata = inbuff[0]
+            output = str(ffi.buffer(strdata, strlen[0])[:])
+            self.lib4d_sql._free_field_string(inbuff)
 
             if fieldtype==self.lib4d_sql.VK_STRING or fieldtype==self.lib4d_sql.VK_TEXT:
                 row.append(output.decode('UTF-16LE'))
@@ -494,6 +509,13 @@ class py4d_cursor(object):
         """"""
         return self
 
+    #----------------------------------------------------------------------
+    def __del__(self):
+        """Garbage collector"""
+        if self.fourd_query is not None and self.fourd_query != ffi.NULL:
+            self.lib4d_sql.fourd_free_statement(self.fourd_query)
+
+
 
 ########################################################################
 ## Connection object
@@ -505,6 +527,7 @@ class py4d_connection:
     def __init__(self, host, user, password, database):
         """Initalize a connection object and connect to a server"""
         self.connptr = lib4d_sql.fourd_init()
+        self.cursors = []
         if self.connptr == ffi.NULL:
             raise InterfaceError("Unable to intialize connection object")
 
@@ -523,11 +546,17 @@ class py4d_connection:
     #----------------------------------------------------------------------
     def close(self):
         """Close the connection to the 4D database"""
+        if self.cursors:
+            for cursor in self.cursors:
+                if cursor.result is not None and cursor.result != ffi.NULL:
+                    lib4d_sql.fourd_free_result(cursor.result)
+
         if self.connected:
             disconnect = lib4d_sql.fourd_close(self.connptr)
             if disconnect != 0:
                 self.connected = False
                 raise OperationalError("Failed to close connection to 4D Server")
+            lib4d_sql.fourd_free(self.connptr)
 
         self.connected = False
 
@@ -538,6 +567,7 @@ class py4d_connection:
 
     def cursor(self):
         cursor = py4d_cursor(self, self.connptr, lib4d_sql)
+        self.cursors.append(cursor)
         return cursor
 
 #----------------------------------------------------------------------

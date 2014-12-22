@@ -705,7 +705,6 @@ void _free_data_result(FOURD_RESULT *res)
 	unsigned int nbElmt=nbCol*nbRow;
 	unsigned int i=0;
 	FOURD_ELEMENT *pElmt=res->elmt;
-	FOURD_ELEMENT *pElmtOrig=pElmt;
 	if(pElmt==NULL) {
 		return;
 	}
@@ -736,8 +735,9 @@ void _free_data_result(FOURD_RESULT *res)
 		}
 	}
 	
-	free(pElmtOrig);
+	free(res->elmt);
 }
+
 void *_copy(FOURD_TYPE type,void *org)
 {
 	void *buff=NULL;

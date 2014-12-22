@@ -261,7 +261,9 @@ int fourd_errno(FOURD *cnx);
 const char * fourd_error(FOURD *cnx);
 const char * fourd_sqlstate(FOURD *cnx);
 void fourd_free(FOURD* cnx);
+void fourd_free_statement(FOURD_STATEMENT *state);
 void fourd_timeout(FOURD* cnx,int timeout);
+void _free_field_string(char **value);
 
 /*function on FOURD_RESULT*/
 FOURD_LONG8 fourd_num_rows(FOURD_RESULT *result);

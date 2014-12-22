@@ -263,6 +263,8 @@ const char * fourd_sqlstate(FOURD *cnx);
 void fourd_free(FOURD* cnx);
 void fourd_free_statement(FOURD_STATEMENT *state);
 void fourd_timeout(FOURD* cnx,int timeout);
+//For use by external non-c code that can't access/clear this block of memory
+//directly.
 void _free_field_string(char **value);
 
 /*function on FOURD_RESULT*/

@@ -170,5 +170,7 @@ int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,siz
 
 int fourd_errno(FOURD *cnx);
 const char * fourd_error(FOURD *cnx);
-void _free_field_string(char **value);
+
+/* Misc other C functions needed by the p4d driver */
+void free(void *);
 

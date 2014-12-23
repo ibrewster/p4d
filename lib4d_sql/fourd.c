@@ -241,12 +241,6 @@ void * fourd_field(FOURD_RESULT *res,unsigned int numCol)
 	return elmt->pValue;
 }
 
-//This function is for use by the python 4d driver, as it appears to be the only
-//way to get this block of memory freed. Hopefully that will change.
-void _free_field_string(char **value){
-	free(*value);
-}
-
 int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,size_t *len)
 {
 	unsigned int nbCol=res->row_type.nbColumn;

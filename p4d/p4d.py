@@ -413,7 +413,7 @@ class py4d_cursor(object):
             self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
             strdata = inbuff[0]
             output = str(ffi.buffer(strdata, strlen[0])[:])
-            self.lib4d_sql._free_field_string(inbuff)
+            self.lib4d_sql.free(strdata)  #must call free explicitly, otherwise we leak.
 
             if fieldtype==self.lib4d_sql.VK_STRING or fieldtype==self.lib4d_sql.VK_TEXT:
                 row.append(output.decode('UTF-16LE'))

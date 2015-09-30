@@ -96,8 +96,8 @@ int dblogin(FOURD *cnx,unsigned short int id_cnx,const char *user,const char*pwd
 	user_b64=base64_encode(user,strlen(user),&len);
 	pwd_b64=base64_encode(pwd,strlen(pwd),&len);
 	sprintf_s(msg,2048,"%03d LOGIN \r\nUSER-NAME-BASE64:%s\r\nUSER-PASSWORD-BASE64:%s\r\nPREFERRED-IMAGE-TYPES:%s\r\nREPLY-WITH-BASE64-TEXT:Y\r\nPROTOCOL-VERSION:0.1a\r\n\r\n",id_cnx,user_b64,pwd_b64,image_type);
-	free(user_b64);
-	free(pwd_b64);
+	Free(user_b64);
+	Free(pwd_b64);
 #else
 	sprintf_s(msg,2048,"%03d LOGIN \r\nUSER-NAME:%s\r\nUSER-PASSWORD:%s\r\nPREFERRED-IMAGE-TYPES:%s\r\nREPLY-WITH-BASE64-TEXT:Y\r\nPROTOCOL-VERSION:0.1a\r\n\r\n",id_cnx,user,pwd,image_type);
 #endif
@@ -110,9 +110,9 @@ int dblogin(FOURD *cnx,unsigned short int id_cnx,const char *user,const char*pwd
 //return 0 if ok 1 if error
 int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT *result,const char*image_type, int res_size)
 {
-	char *msg;
-	FOURD_RESULT *res;
-	unsigned char *request_b64;
+	char *msg=NULL;
+	FOURD_RESULT *res=NULL;
+	unsigned char *request_b64=NULL;
 	int len;
 	Printf("---Debut de _query\n");
 	_clear_atrr_cnx(cnx);
@@ -129,7 +129,7 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 	size_t buff_size=strlen(format_str)+strlen((const char *)request_b64)+42; //add some extra for the additional arguments and a bit more for good measure.
 	msg=(char *)malloc(buff_size);
 	snprintf(msg,buff_size,format_str,id_cmd,request_b64,"release",res_size,image_type);
-	free(request_b64);
+	Free(request_b64);
 #else
 	char *format_str="%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\n\r\n";
 	size_t buff_size=strlen(format_str)+strlen(request)+42; //add some extra for the additional arguments and a bit more for good measure.
@@ -139,7 +139,7 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 
 	cnx->updated_row=-1;
 	socket_send(cnx,msg);
-	free(msg);
+	Free(msg);
 	
 	if(receiv_check(cnx,res)!=0)
 		return 1;
@@ -172,18 +172,18 @@ int _query(FOURD *cnx,unsigned short int id_cmd,const char *request,FOURD_RESULT
 }
 
 int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request){
-	char *msg;
+	char *msg=NULL;
 	FOURD_RESULT *res=calloc(1,sizeof(FOURD_RESULT));
 	int len;
 	
 #if __STATEMENT_BASE64__
-	unsigned char *request_b64;
+	unsigned char *request_b64=NULL;
 	request_b64=base64_encode(request,strlen(request),&len);
 	char *format_str="%03d PREPARE-STATEMENT\r\nSTATEMENT-BASE64: %s\r\n\r\n";
 	unsigned long buff_size=strlen(format_str)+strlen((const char *)request_b64)+2; //add some extra for good measure.
 	msg=(char *)malloc(buff_size);
 	snprintf(msg,buff_size,format_str,id_cmd,request_b64);
-	free(request_b64);
+	Free(request_b64);
 #else
 	char *format_str="%03d PREPARE-STATEMENT\r\nSTATEMENT: %s\r\n\r\n";
 	unsigned long buff_size=strlen(format_str)+strlen(request)+2; //add some extra for good measure.
@@ -193,7 +193,7 @@ int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request)
 	
 	cnx->updated_row=-1;
 	socket_send(cnx,msg);
-	free(msg);
+	Free(msg);
 	
 	if(receiv_check(cnx,res)!=0)
 		return 1;
@@ -221,7 +221,7 @@ int _prepare_statement(FOURD *cnx,unsigned short int id_cmd,const char *request)
 int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsigned int nbParam, const FOURD_ELEMENT *param,FOURD_RESULT *result,const char*image_type,int res_size)
 {
 	char *msg=NULL;
-	FOURD_RESULT *res;
+	FOURD_RESULT *res=NULL;
 	unsigned char *request_b64=NULL;
 	int len;
 	char *sParam=NULL;
@@ -272,7 +272,7 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 	size_t msg_length=strlen((const char *)request_b64)+strlen(msg_format)+strlen(image_type)+strlen(sParam)+20;
 	msg=malloc(msg_length);
 	snprintf(msg,msg_length,msg_format,id_cmd,request_b64,"release",res_size,image_type,sParam);
-	free(request_b64);
+	Free(request_b64);
 #else
 	char *msg_format="%03d EXECUTE-STATEMENT\r\nSTATEMENT:%s\r\nOutput-Mode:%s\r\nFIRST-PAGE-SIZE:%i\r\nPREFERRED-IMAGE-TYPES:%s\r\nPARAMETER-TYPES:%s\r\n\r\n";
 	size_t msg_length=strlen(request)+strlen(msg_format)+strlen(image_type)+strlen(sParam)+20;
@@ -280,10 +280,10 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 	snprintf(msg,msg_length,msg_format,id_cmd,request,"release",res_size,image_type,sParam);
 #endif
 	
-	free(sParam);
+	Free(sParam);
 
 	socket_send(cnx,msg);
-	free(msg);
+	Free(msg);
 	socket_send_data(cnx,data,data_len);
 	if(receiv_check(cnx,res)!=0)
 		return 1;
@@ -457,7 +457,7 @@ int get(const char* msg,const char* section,char *valeur,int max_length)
 		valeur_decode[len_dec]=0;
 		strncpy_s(valeur,max_length,(const char*)valeur_decode,(size_t)len_dec);
 		valeur[len_dec]=0;
-		free(valeur_decode);
+		Free(valeur_decode);
 	}
 	return 0;
 }
@@ -735,7 +735,7 @@ void _free_data_result(FOURD_RESULT *res)
 		}
 	}
 	
-	free(res->elmt);
+	Free(res->elmt);
 }
 
 void *_copy(FOURD_TYPE type,void *org)

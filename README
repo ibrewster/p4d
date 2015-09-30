@@ -1,4 +1,9 @@
 p4d is a Python Database API 2.0 compliant driver for the 4D (4th Dimension) database server. As such, usage should be familiar to anyone who has used any python database modules before. This module is based off of a C library provided by 4D, and integrated with Python using CFFI. As such, installation of this module does require CFFI.
+v0.7 2015-09-30:
+ - Fix bug with running multiple queries in a row on the same cursor
+
+v0.6 2015-02-17:
+ - Fix bug with handling of time values containing milliseconds
 
 v0.5.1 2014-12-23:
  - Imporoved method of freeing memory used by the fetchone call

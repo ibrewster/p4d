@@ -115,10 +115,15 @@ void fourd_free(FOURD* cnx)
 #ifdef WIN32
 	WSACleanup();
 #endif
-	if (cnx->preferred_image_types!=NULL)
+	if (cnx->preferred_image_types!=NULL){
 		free(cnx->preferred_image_types);
+		cnx->preferred_image_types=NULL;
+	}
 
-	free(cnx);
+	if (cnx!=NULL) {
+		free(cnx);
+		cnx=NULL;
+	}
 }
 
 
@@ -159,7 +164,7 @@ void fourd_free_result(FOURD_RESULT *res)
 {
 	if(res!=NULL && res->elmt!=NULL)
 			_free_data_result(res);
-	free(res->row_type.Column);
+	Free(res->row_type.Column);
 	Free(res);
 }
 int fourd_next_row(FOURD_RESULT *res)
@@ -371,16 +376,22 @@ int fourd_num_columns(FOURD_RESULT *res)
 }
 
 void fourd_free_statement(FOURD_STATEMENT *state){
-	if (state->query!=NULL)
+	if (state->query!=NULL){
 		free(state->query);
+		state->query=NULL;
+	}
 	
-	if(state->elmt!=NULL)
+	if(state->elmt!=NULL){
 		free(state->elmt);
+		state->elmt=NULL;
+	}
 	
-	if (state->preferred_image_types!=NULL)
+	if (state->preferred_image_types!=NULL){
 		free(state->preferred_image_types);
+		state->preferred_image_types=NULL;
+	}
 	
-	free(state);
+	Free(state);
 }
 
 FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query)

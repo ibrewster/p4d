@@ -230,7 +230,7 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 	unsigned int nbCol=state->row_type.nbColumn;
 	unsigned int nbRow=state->row_count_sent;
 	unsigned int r,c;
-	FOURD_TYPE *colType;
+	FOURD_TYPE *colType=NULL;
 	FOURD_ELEMENT *pElmt=NULL;
 	unsigned char status_code=0;
 	//int elmt_size=0;

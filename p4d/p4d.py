@@ -4,7 +4,8 @@ from cffi.verifier import Verifier
 from dateutil import parser
 from datetime import datetime, timedelta, time, date
 from collections import defaultdict
-import time, threading, glob
+import time as timemod
+import threading, glob
 ########################################################################
 ## Python DB API Globals
 ########################################################################
@@ -130,13 +131,13 @@ class NotSupportedError(DatabaseError):
 ## Data type classes
 ########################################################################
 def DateFromTicks(ticks):
-    return Date(*time.localtime(ticks)[:3])
+    return Date(*timemod.localtime(ticks)[:3])
 
 def TimeFromTicks(ticks):
-    return Time(*time.localtime(ticks)[3:6])
+    return Time(*timemod.localtime(ticks)[3:6])
 
 def TimestampFromTicks(ticks):
-    return Timestamp(*time.localtime(ticks)[:6])
+    return Timestamp(*timemod.localtime(ticks)[:6])
 
 ########################################################################
 class Binary(str):
@@ -243,6 +244,10 @@ class py4d_cursor(object):
                 break
 
         if self.__prepared == False:  #Should always be false, unless we are running an executemany
+            #clean up anything from a previous query, if needed.
+            if self.result is not None and self.result != ffi.NULL:
+                self.lib4d_sql.fourd_close_statement(self.result)
+
             self.fourd_query = self.lib4d_sql.fourd_prepare_statement(self.fourdconn, query)
 
         if self.fourd_query == ffi.NULL:
@@ -277,6 +282,12 @@ class py4d_cursor(object):
                 param = ffi.new("FOURD_REAL *", parameter)
             elif param_type == None:
                 param = ffi.NULL
+            elif param_type == time:
+                #almost the same as calling str(), but without milliseconds
+                itemstr = parameter.strftime('%H:%M:%S')
+                param = ffi.new("FOURD_STRING *")
+                param.length = len(itemstr)
+                param.data = ffi.new("char[]", itemstr.encode('UTF-16LE'))
             elif param_type == tuple:
                 numparams = len(parameter)
 
@@ -413,7 +424,9 @@ class py4d_cursor(object):
             self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
             strdata = inbuff[0]
             output = str(ffi.buffer(strdata, strlen[0])[:])
-            self.lib4d_sql.free(strdata)  #must call free explicitly, otherwise we leak.
+            if strdata != ffi.NULL:
+                self.lib4d_sql.free(strdata)  #must call free explicitly, otherwise we leak.
+                strdata = ffi.NULL
 
             if fieldtype==self.lib4d_sql.VK_STRING or fieldtype==self.lib4d_sql.VK_TEXT:
                 row.append(output.decode('UTF-16LE'))

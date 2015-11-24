@@ -157,6 +157,7 @@ FOURD_RESULT *fourd_exec_statement(FOURD_STATEMENT *state, int res_size);
 int fourd_close_statement(FOURD_RESULT *res);
 void fourd_free_result(FOURD_RESULT *res);
 void fourd_free(FOURD* cnx);
+void fourd_free_statement(FOURD_STATEMENT *state);
 
 int fourd_next_row(FOURD_RESULT *res);
 void * fourd_field(FOURD_RESULT *res,unsigned int numCol);

@@ -1,1 +1,1 @@
-from p4d import *
+from .p4d import *

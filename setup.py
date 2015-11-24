@@ -47,7 +47,9 @@ setup(
     classifiers=['Development Status :: 4 - Beta',
                  'License :: OSI Approved :: BSD License',
                  'Intended Audience :: Developers',
-                 'Topic :: Database'],
+                 'Topic :: Database',
+		 'Programming Language :: Python :: 3',
+		 'Programming Language :: Python :: 2'],
     keywords='datababase drivers DBI 4d'
 
 )

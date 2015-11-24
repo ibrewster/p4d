@@ -1,3 +1,5 @@
+from __future__ import absolute_import,unicode_literals
+
 import os, sys, binascii
 from cffi import FFI
 from cffi.verifier import Verifier
@@ -6,12 +8,30 @@ from datetime import datetime, timedelta, time, date
 from collections import defaultdict
 import time as timemod
 import threading, glob
+
+
 ########################################################################
 ## Python DB API Globals
 ########################################################################
 apilevel = " 2.0 "
 threadsafety = 0  # no idea, so better safe
 paramstyle = "qmark"  # unfortunately
+
+########################################################################
+## Python 3 compatibility
+## These types will never show up under python 3, but if I don't declare
+## them I'll get a name error when I try to check for them, as I must for
+## python 2 compatibility.
+########################################################################
+try:
+    unicode
+except NameError:
+    unicode = str
+
+try:
+    long
+except NameError:
+    long = int
 
 
 ########################################################################
@@ -96,10 +116,10 @@ os.chdir(_CWD)
 ########################################################################
 ## Error Classes
 ########################################################################
-class Warning(StandardError):
+class Warning(Exception):
     pass
 
-class Error(StandardError):
+class Error(Exception):
     pass
 
 class InterfaceError(Error):
@@ -248,7 +268,7 @@ class py4d_cursor(object):
             if self.result is not None and self.result != ffi.NULL:
                 self.lib4d_sql.fourd_close_statement(self.result)
 
-            self.fourd_query = self.lib4d_sql.fourd_prepare_statement(self.fourdconn, query)
+            self.fourd_query = self.lib4d_sql.fourd_prepare_statement(self.fourdconn, query.encode('utf-8'))
 
         if self.fourd_query == ffi.NULL:
             error = ffi.string(self.lib4d_sql.fourd_error(self.fourdconn))
@@ -510,12 +530,14 @@ class py4d_cursor(object):
         return resultset
 
     #----------------------------------------------------------------------
-    def next(self):
+    def __next__(self):
         """Return the next result row"""
         result = self.fetchone()
         if result is None:
             raise StopIteration
         return result
+
+    next = __next__ # for python 2 compatibility
 
     #----------------------------------------------------------------------
     def __iter__(self):
@@ -545,10 +567,10 @@ class py4d_connection:
             raise InterfaceError("Unable to intialize connection object")
 
         connected = lib4d_sql.fourd_connect(self.connptr,
-                                            host,
-                                            user,
-                                            password,
-                                            database,
+                                            host.encode('utf-8'),
+                                            user.encode('utf-8'),
+                                            password.encode('utf-8'),
+                                            database.encode('utf-8'),
                                             19812)
         if connected != 0:
             self.connected = False
@@ -568,6 +590,7 @@ class py4d_connection:
             disconnect = lib4d_sql.fourd_close(self.connptr)
             if disconnect != 0:
                 self.connected = False
+                print("Disconnect returned code: {}".format(disconnect))
                 raise OperationalError("Failed to close connection to 4D Server")
             lib4d_sql.fourd_free(self.connptr)
 

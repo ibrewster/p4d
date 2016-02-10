@@ -26,9 +26,9 @@ class CFFIInstall(install):
 setup(
     zip_safe=False,
     name="p4d",
-    version="0.7",
+    version="0.9",
     install_requires=["cffi", ],
-    setup_requires=['cffi', ],
+    setup_requires=['cffi', 'python-dateutil' ],
     packages=find_packages(),
     # need to include these files to be able to build our shared library
     package_data={'p4d': ['py_fourd.h'],},
@@ -51,5 +51,4 @@ setup(
 		 'Programming Language :: Python :: 3',
 		 'Programming Language :: Python :: 2'],
     keywords='datababase drivers DBI 4d'
-
 )

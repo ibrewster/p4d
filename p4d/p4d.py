@@ -1,5 +1,3 @@
-from __future__ import absolute_import,unicode_literals
-
 import os, sys, binascii
 from cffi import FFI
 from cffi.verifier import Verifier
@@ -7,7 +5,7 @@ from dateutil import parser
 from datetime import datetime, timedelta, time, date
 from collections import defaultdict
 import time as timemod
-import threading, glob
+import threading, glob, re
 
 
 ########################################################################
@@ -244,6 +242,28 @@ class py4d_cursor(object):
         if self.connection.connected == False:
             raise InternalError("Database not connected")
 
+        # See if we are using named parameters. If so, break them out (we always need qmark style in the end)
+        if isinstance(params, dict):
+            new_params = []
+            # Parse query string for references to dict entries
+            regex = re.compile('%\(([^\)]+)\)s')
+            for key in re.findall(regex, query):
+                new_params.append(params[key])  # Will raise key error if the query string argument is not in params.
+
+            if not new_params:
+                # We didn't match anything in the query string for the %()s format markers. Try named (:name) instead
+                regex = re.compile(':([A-Za-z0-9]+)')
+                for key in re.findall(regex, query):
+                    new_params.append(params[key])
+
+            query = re.sub(regex, '?', query)
+            params = new_params
+
+        # If using "format" parameter markers, just convert all %<whatever> markers to ?'s
+        query = re.sub('%[A-Za-z]', '?', query)
+        query.replace('%%', '%')  # Replace double-quotes with single quote
+
+
         # if any parameter is a tuple, we need to modify the query string and
         # make multiple passes through the parameters, breaking out one tuple/list
         # each time.
@@ -443,7 +463,7 @@ class py4d_cursor(object):
 
             self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
             strdata = inbuff[0]
-            output = str(ffi.buffer(strdata, strlen[0])[:])
+            output = ffi.buffer(strdata, strlen[0])[:]
             if strdata != ffi.NULL:
                 self.lib4d_sql.free(strdata)  #must call free explicitly, otherwise we leak.
                 strdata = ffi.NULL

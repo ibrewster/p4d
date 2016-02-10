@@ -10,3 +10,4 @@ package.sh
 testMain.c
 dist
 *.egg-info
+virtualenv

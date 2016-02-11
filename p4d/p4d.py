@@ -6,14 +6,15 @@ from datetime import datetime, timedelta, time, date
 from collections import defaultdict
 import time as timemod
 import threading, glob, re
+import contextlib
 
 
 ########################################################################
 ## Python DB API Globals
 ########################################################################
 apilevel = " 2.0 "
-threadsafety = 0  # no idea, so better safe
-paramstyle = "qmark"  # unfortunately
+threadsafety = 0  # no idea, so better safe. I cna run queries in multiple threads, but that's not the same thing.
+paramstyle = "pyformat"
 
 ########################################################################
 ## Python 3 compatibility
@@ -282,6 +283,10 @@ class py4d_cursor(object):
 
             if not foundtuple:
                 break
+
+        # Start a new transaction if we are not already in one
+        if not self.connection.in_transaction:
+            self.connection.__start_transaction__()
 
         if self.__prepared == False:  #Should always be false, unless we are running an executemany
             #clean up anything from a previous query, if needed.
@@ -570,6 +575,17 @@ class py4d_cursor(object):
         if self.fourd_query is not None and self.fourd_query != ffi.NULL:
             self.lib4d_sql.fourd_free_statement(self.fourd_query)
 
+    #----------------------------------------------------------------------
+    def __enter__(self):
+        """"""
+        return self
+
+    #----------------------------------------------------------------------
+    def __exit__(self, ex_type, ex_val, tb):
+        """"""
+        if self.fourd_query is not None and self.fourd_query != ffi.NULL:
+            self.lib4d_sql.fourd_free_statement(self.fourd_query)
+
 
 
 ########################################################################
@@ -577,6 +593,8 @@ class py4d_cursor(object):
 ########################################################################
 class py4d_connection:
     """Connection object for a 4D database"""
+
+    in_transaction = False
 
     #----------------------------------------------------------------------
     def __init__(self, host, user, password, database):
@@ -597,10 +615,23 @@ class py4d_connection:
             raise OperationalError("Unable to connect to 4D Server")
         else:
             self.connected = True
+            self.__private_cursor__ = self.cursor()
+
+    #----------------------------------------------------------------------
+    def __start_transaction__(self):
+        """"""
+        if self.in_transaction:
+            return;  #already in transaction, don't do anything
+        self.in_transaction = True
+        self.__private_cursor__.execute("START TRANSACTION")
 
     #----------------------------------------------------------------------
     def close(self):
         """Close the connection to the 4D database"""
+        # Implicit rollback of any transactions
+        if self.in_transaction:
+            self.__private_cursor__.execute("ROLLBACK")
+
         if self.cursors:
             for cursor in self.cursors:
                 if cursor.result is not None and cursor.result != ffi.NULL:
@@ -618,13 +649,41 @@ class py4d_connection:
 
     #----------------------------------------------------------------------
     def commit(self):
-        """This module is not implemented with transactional functionality built-in"""
-        pass
+        """Commit the current transaction, and set the flag"""
+        if self.in_transaction:
+            self.__private_cursor__.execute("COMMIT")
+        self.in_transaction = False
 
+    #----------------------------------------------------------------------
+    def rollback(self):
+        """ROLLBACK the current transaction, and start a new one"""
+        if self.in_transaction:
+            self.__private_cursor__.execute("ROLLBACK")
+        self.in_transaction = False
+
+    #----------------------------------------------------------------------
     def cursor(self):
         cursor = py4d_cursor(self, self.connptr, lib4d_sql)
         self.cursors.append(cursor)
         return cursor
+
+    #----------------------------------------------------------------------
+    def __enter__(self):
+        """"""
+        return self
+
+    #----------------------------------------------------------------------
+    def __exit__(self, ex_type, ex_val, tb):
+        """"""
+        if ex_type is not None:
+            if self.in_transaction:
+                self.rollback()
+                return False  # Procede to normal handling of exception
+        else:
+            if self.in_transaction:
+                self.commit()
+
+
 
 #----------------------------------------------------------------------
 def connect(dsn=None, user=None, password=None, host=None, database=None):
@@ -664,4 +723,5 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
 
     # Try to connect to the database
     fourd_connection = py4d_connection(**connect_args)
+
     return fourd_connection

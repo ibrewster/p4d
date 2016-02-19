@@ -26,7 +26,7 @@ class CFFIInstall(install):
 setup(
     zip_safe=False,
     name="p4d",
-    version="0.9",
+    version="1.0",
     install_requires=["cffi", ],
     setup_requires=['cffi', 'python-dateutil' ],
     packages=find_packages(),
@@ -44,7 +44,7 @@ setup(
     long_description="This module provides a Python Database API v2.0 compliant driver for the 4D (4th Dimension, http://www.4d.com ) database. Based off of C library code provided by 4th Dimension and implemented using CFFI",
 
     license='BSD',
-    classifiers=['Development Status :: 4 - Beta',
+    classifiers=['Development Status :: 5 - Production/Stable',
                  'License :: OSI Approved :: BSD License',
                  'Intended Audience :: Developers',
                  'Topic :: Database',

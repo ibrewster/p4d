@@ -15,7 +15,7 @@ v0.6 2015-02-17:
  - Fix bug with handling of time values containing milliseconds
 
 v0.5.1 2014-12-23:
- - Imporoved method of freeing memory used by the fetchone call
+ - Improved method of freeing memory used by the fetchone call
 
 v0.5 2014-12-22:
  - Fix remaining memory leak with execute many call. Turns out there were leaks both in the C library as well as in how I was calling the library. Testing now shows memory usage stable at 11MB when processing a 1,000,000 record result set.

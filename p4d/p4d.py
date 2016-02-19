@@ -296,6 +296,12 @@ class py4d_cursor(object):
             self.fourd_query = self.lib4d_sql.fourd_prepare_statement(self.fourdconn, query.encode('utf-8'))
 
         if self.fourd_query == ffi.NULL:
+            ##Query was unable to be prepared, so create a default object
+            #self.fourd_query = ffi.new("FOURD_STATEMENT *")
+            #self.fourd_query.cnx = self.fourdconn
+            #self.fourd_query.query = ffi.new("char[]", query.encode())
+            #self.fourd_query.elmt = ffi.new("FOURD_ELEMENT *")
+
             error = ffi.string(self.lib4d_sql.fourd_error(self.fourdconn))
             raise ProgrammingError(error)
 

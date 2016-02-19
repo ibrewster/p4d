@@ -400,8 +400,11 @@ FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query)
 	if(cnx==NULL || !cnx->connected || query==NULL)
 		return NULL;
 	
-	if(_prepare_statement(cnx, 3, query)!=0)
-		return NULL;
+	//if(_prepare_statement(cnx, 3, query)!=0)
+	//	return NULL;
+	
+	//try to prepare the statement. If it doesn't work, oh well.
+	_prepare_statement(cnx, 3, query);
 	
 	state=calloc(1,sizeof(FOURD_STATEMENT));
 	state->cnx=cnx;

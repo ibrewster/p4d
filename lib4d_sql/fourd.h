@@ -282,6 +282,7 @@ int fourd_num_columns(FOURD_RESULT *res);
 int fourd_field_to_string(FOURD_RESULT *res,unsigned int numCol,char **value,size_t *len);
 
 FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query);
+FOURD_STRING *fourd_create_string(char *param,int length);
 int fourd_bind_param(FOURD_STATEMENT *state,unsigned int numParam,FOURD_TYPE type, void *val);
 FOURD_RESULT *fourd_exec_statement(FOURD_STATEMENT *state, int res_size);
 

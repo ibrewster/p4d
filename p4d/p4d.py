@@ -322,9 +322,8 @@ class py4d_cursor(object):
 
             if param_type == str or param_type == unicode:
                 # Very similar to the default, but we don't have to call string on the parameter
-                param = ffi.new("FOURD_STRING *")
-                param.length = len(parameter)
-                param.data = ffi.new("char[]", parameter.encode('UTF-16LE'))
+                param = self.lib4d_sql.fourd_create_string(parameter.encode('UTF-16LE'),
+                                                           len(parameter))
             elif param_type == bool:
                 param = ffi.new("FOURD_BOOLEAN *", parameter)
             elif param_type == int or param_type == long:
@@ -336,21 +335,18 @@ class py4d_cursor(object):
             elif param_type == time:
                 #almost the same as calling str(), but without milliseconds
                 itemstr = parameter.strftime('%H:%M:%S')
-                param = ffi.new("FOURD_STRING *")
-                param.length = len(itemstr)
-                param.data = ffi.new("char[]", itemstr.encode('UTF-16LE'))
+                param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
+                                                           len(itemstr))
             elif param_type == tuple:
                 numparams = len(parameter)
 
                 itemstr =  str(parameter)
-                param = ffi.new("FOURD_STRING *")
-                param.length = len(itemstr)
-                param.data = ffi.new("char[]", itemstr)
+                param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
+                                                           len(itemstr))
             else:
                 itemstr =  str(parameter)
-                param = ffi.new("FOURD_STRING *")
-                param.length = len(itemstr)
-                param.data = ffi.new("char[]", itemstr.encode('UTF-16LE'))
+                param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
+                                                           len(itemstr))
 
 
             bound = self.lib4d_sql.fourd_bind_param(self.fourd_query, idx, fourd_type, param)
@@ -731,3 +727,4 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
     fourd_connection = py4d_connection(**connect_args)
 
     return fourd_connection
+

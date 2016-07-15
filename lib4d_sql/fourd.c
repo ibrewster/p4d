@@ -422,6 +422,16 @@ FOURD_STATEMENT * fourd_prepare_statement(FOURD *cnx,const char *query)
 	return state;
 }
 
+FOURD_STRING *fourd_create_string(char *param,int length){
+	//length is the character length of the string. Byte length is twice that due to UTF-16LE encoding
+	FOURD_STRING *cp=NULL;
+	cp=calloc(1,sizeof(FOURD_STRING));
+	cp->data=calloc(length,2);	/* 2 bytes per char */
+	cp->length=length;
+	memcpy(cp->data,param,length*2);  /* 2 bytes per char */
+	
+	return cp;
+}
 
 int fourd_bind_param(FOURD_STATEMENT *state,unsigned int numParam,FOURD_TYPE type, void *val)
 {

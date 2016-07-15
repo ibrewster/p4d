@@ -26,7 +26,7 @@ class CFFIInstall(install):
 setup(
     zip_safe=False,
     name="p4d",
-    version="1.1",
+    version="1.2",
     install_requires=["cffi", ],
     setup_requires=['cffi', 'python-dateutil' ],
     packages=find_packages(),

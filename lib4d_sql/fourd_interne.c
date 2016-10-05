@@ -285,8 +285,13 @@ int _query_param(FOURD *cnx,unsigned short int id_cmd, const char *request,unsig
 	socket_send(cnx,msg);
 	Free(msg);
 	socket_send_data(cnx,data,data_len);
-	if(receiv_check(cnx,res)!=0)
+	//done with the data object, free it
+	if(data!=NULL)
+		free(data);
+	
+	if(receiv_check(cnx,res)!=0){
 		return 1;
+	}
 
 	switch(res->resultType)	{
 	case UPDATE_COUNT:
@@ -364,7 +369,6 @@ int _fetch_result(FOURD_RESULT *res,unsigned short int id_cmd)
 	res->first_row=first_row;
 	res->row_count_sent=last_row-first_row+1;
 	res->error_code=nRes->error_code;
-	last_data=res->error_string;
 	sprintf_s(res->error_string,sizeof(res->error_string),"%s",nRes->error_string);
 	res->status=nRes->status;
 	

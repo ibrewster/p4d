@@ -319,11 +319,13 @@ class py4d_cursor(object):
         for idx, parameter in enumerate(params):
             param_type = type(parameter)
             fourd_type = fourdtypes[param_type]
+            manual_clear = False
 
             if param_type == str or param_type == unicode:
                 # Very similar to the default, but we don't have to call string on the parameter
                 param = self.lib4d_sql.fourd_create_string(parameter.encode('UTF-16LE'),
                                                            len(parameter))
+                manual_clear = True
             elif param_type == bool:
                 param = ffi.new("FOURD_BOOLEAN *", parameter)
             elif param_type == int or param_type == long:
@@ -337,21 +339,31 @@ class py4d_cursor(object):
                 itemstr = parameter.strftime('%H:%M:%S')
                 param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
                                                            len(itemstr))
+                manual_clear = True
+
             elif param_type == tuple:
                 numparams = len(parameter)
 
                 itemstr =  str(parameter)
                 param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
                                                            len(itemstr))
+                manual_clear = True
+
             else:
                 itemstr =  str(parameter)
                 param = self.lib4d_sql.fourd_create_string(itemstr.encode('UTF-16LE'),
                                                            len(itemstr))
+                manual_clear = True
 
 
             bound = self.lib4d_sql.fourd_bind_param(self.fourd_query, idx, fourd_type, param)
             if bound != 0:
                 raise ProgrammingError(ffi.string(self.lib4d_sql.fourd_error(self.fourdconn)))
+
+            # Clean up any string parameters created by the above calls to fourd_create_string
+            if manual_clear:
+                self.lib4d_sql.free(param.data)
+                self.lib4d_sql.free(param)
 
         #properly clean up any old results
         if self.result is not None and self.result != ffi.NULL:
@@ -480,7 +492,10 @@ class py4d_cursor(object):
             elif fieldtype == self.lib4d_sql.VK_BOOLEAN:
                 boolval = self.lib4d_sql.fourd_field_long(self.result, col)
                 row.append(bool(boolval[0]))
-            elif fieldtype == self.lib4d_sql.VK_LONG or fieldtype == self.lib4d_sql.VK_LONG8:
+            #numerical types
+            elif fieldtype == self.lib4d_sql.VK_LONG or \
+                 fieldtype == self.lib4d_sql.VK_LONG8 or \
+                 fieldtype == self.lib4d_sql.VK_WORD:
                 intval = self.lib4d_sql.fourd_field_long(self.result, col)
                 row.append(intval[0])
             elif fieldtype == self.lib4d_sql.VK_REAL or fieldtype == self.lib4d_sql.VK_FLOAT:

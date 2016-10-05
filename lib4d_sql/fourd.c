@@ -164,8 +164,11 @@ void fourd_free_result(FOURD_RESULT *res)
 {
 	if(res!=NULL && res->elmt!=NULL)
 			_free_data_result(res);
-	Free(res->row_type.Column);
-	Free(res);
+	
+	if(res!=NULL){
+		Free(res->row_type.Column);
+		Free(res);
+	}
 }
 int fourd_next_row(FOURD_RESULT *res)
 {

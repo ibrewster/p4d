@@ -626,7 +626,7 @@ class py4d_connection:
                                             user.encode('utf-8'),
                                             password.encode('utf-8'),
                                             database.encode('utf-8'),
-                                            port.encode('utf-8'))
+                                            port)
         if connected != 0:
             self.connected = False
             raise OperationalError("Unable to connect to 4D Server")
@@ -731,13 +731,15 @@ def connect(dsn=None, user=None, password=None, host=None, database=None, port=N
         connect_args['database'] = database
     
     if port is not None:
-        connect_args['port'] = port
+        connect_args['port'] = int(port)
+    else:
+        connect_args['port'] = 19812
         
     if 'host' not in connect_args:
         # Need at least a host to connect to
         raise ValueError("Host name is required")
 
-    for key in ['user', 'password', 'database', 'port']:
+    for key in ['user', 'password', 'database']:
         if key not in connect_args:
             connect_args[key] = ""  # use an empty string if the argument is not provided. For example, if you don't need a user and password to log in.
 

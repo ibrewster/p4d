@@ -614,7 +614,7 @@ class py4d_connection:
     in_transaction = False
 
     #----------------------------------------------------------------------
-    def __init__(self, host, user, password, database):
+    def __init__(self, host, user, password, database, port):
         """Initalize a connection object and connect to a server"""
         self.connptr = lib4d_sql.fourd_init()
         self.cursors = []
@@ -626,7 +626,7 @@ class py4d_connection:
                                             user.encode('utf-8'),
                                             password.encode('utf-8'),
                                             database.encode('utf-8'),
-                                            19812)
+                                            port)
         if connected != 0:
             self.connected = False
             raise OperationalError("Unable to connect to 4D Server")
@@ -703,7 +703,7 @@ class py4d_connection:
 
 
 #----------------------------------------------------------------------
-def connect(dsn=None, user=None, password=None, host=None, database=None):
+def connect(dsn=None, user=None, password=None, host=None, database=None, port=None):
     connect_args = {}
 
     # make an argument dict based off of the arguments passed.
@@ -713,7 +713,7 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
         for part in dsn_parts:
             part = part.strip()
             part_parts = part.split("=")
-            if part_parts[0] not in ['host', 'user', 'password', 'database']:
+            if part_parts[0] not in ['host', 'user', 'password', 'database', 'port']:
                 raise ValueError("Unrecognized parameter: {}".format(part_parts[0]))
 
             connect_args[part_parts[0]] = part_parts[1]
@@ -729,7 +729,12 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
 
     if database is not None:
         connect_args['database'] = database
-
+    
+    if port is not None:
+        connect_args['port'] = int(port)
+    else:
+        connect_args['port'] = 19812
+        
     if 'host' not in connect_args:
         # Need at least a host to connect to
         raise ValueError("Host name is required")

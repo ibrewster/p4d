@@ -30,6 +30,7 @@
 #include "fourd.h"
 #include "fourd_int.h"
 #include "base64.h"
+#include <sys/select.h>
 #include <string.h>
 #include <time.h>
 #ifdef WIN32

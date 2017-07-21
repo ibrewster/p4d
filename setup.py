@@ -26,8 +26,8 @@ class CFFIInstall(install):
 setup(
     zip_safe=False,
     name="p4d",
-    version="1.3",
-    install_requires=["cffi", ],
+    version="1.4",
+    install_requires=["cffi","python-dateutil" ],
     setup_requires=['cffi', 'python-dateutil' ],
     packages=find_packages(),
     # need to include these files to be able to build our shared library

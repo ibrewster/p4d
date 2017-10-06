@@ -216,6 +216,7 @@ class py4d_cursor(object):
         """Close the database connection"""
         if self.result is not None:
             self.lib4d_sql.fourd_free_result(self.result)
+            self.result = None
         self.connection.close()
         self.__description = None
         self.__rowcount = -1
@@ -653,6 +654,7 @@ class py4d_connection:
             for cursor in self.cursors:
                 if cursor.result is not None and cursor.result != ffi.NULL:
                     lib4d_sql.fourd_free_result(cursor.result)
+                    cursor.result = None
 
         if self.connected:
             disconnect = lib4d_sql.fourd_close(self.connptr)
@@ -729,12 +731,12 @@ def connect(dsn=None, user=None, password=None, host=None, database=None, port=N
 
     if database is not None:
         connect_args['database'] = database
-    
+
     if port is not None:
         connect_args['port'] = int(port)
     else:
         connect_args['port'] = 19812
-        
+
     if 'host' not in connect_args:
         # Need at least a host to connect to
         raise ValueError("Host name is required")

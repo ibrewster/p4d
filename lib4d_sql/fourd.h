@@ -63,7 +63,7 @@ typedef struct in_addr IN_ADDR;
 #define BUFFER_LENGTH 131072
 #define ERROR_STRING_LENGTH 2048
 
-#define MAX_HEADER_SIZE 2048
+#define MAX_HEADER_SIZE 4096
 #define DEFAULT_IMAGE_TYPE "jpg"
 #define MAX_LENGTH_COLUMN_NAME 255
 
@@ -196,7 +196,7 @@ typedef struct{
 
 typedef struct{
 	FOURD *cnx;
-	char header[MAX_HEADER_SIZE];
+	char *header;
 	unsigned int header_size;
 
 	/*state of statement (OK or KO)*/

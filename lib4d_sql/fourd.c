@@ -162,10 +162,13 @@ FOURD_RESULT* fourd_query(FOURD *cnx,const char *query)
 }
 void fourd_free_result(FOURD_RESULT *res)
 {
-	if(res!=NULL && res->elmt!=NULL)
-			_free_data_result(res);
-	
 	if(res!=NULL){
+		if(res->elmt!=NULL)
+			_free_data_result(res);
+		
+		if(res->header!=NULL)
+			Free(res->header);
+		
 		Free(res->row_type.Column);
 		Free(res);
 	}

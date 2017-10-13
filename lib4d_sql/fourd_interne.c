@@ -626,7 +626,6 @@ int traite_header_response(FOURD_RESULT* state)
 			Printf("Column-Aliases-Base64 => '%s'\n",column_alias);
 			_alias_str_replace(column_alias);
 			alias = strtok_s(column_alias, "\r",&context);
-			free(column_alias);
 			if(alias!=NULL)
 			do{				
 				Printf("Alias %d: '%s'\n",num+1,alias);
@@ -645,6 +644,7 @@ int traite_header_response(FOURD_RESULT* state)
 			}while(alias!=NULL);
 			Printf("Fin de la lecture des alias\n");
 		}
+		free(column_alias);
 	}
 	//get Row-Count
 	{

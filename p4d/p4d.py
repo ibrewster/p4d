@@ -13,7 +13,7 @@ import contextlib
 ## Python DB API Globals
 ########################################################################
 apilevel = " 2.0 "
-threadsafety = 0  # no idea, so better safe. I cna run queries in multiple threads, but that's not the same thing.
+threadsafety = 0  # no idea, so better safe. I can run queries in multiple threads, but that's not the same thing.
 paramstyle = "pyformat"
 
 ########################################################################
@@ -174,6 +174,7 @@ class py4d_cursor(object):
 
     __resulttype = None
     __prepared = False
+    __closed = False
 
     @property
     def rownumber(self):
@@ -216,10 +217,11 @@ class py4d_cursor(object):
         """Close the database connection"""
         if self.result is not None:
             self.lib4d_sql.fourd_free_result(self.result)
-        self.connection.close()
+            self.result = None
         self.__description = None
         self.__rowcount = -1
         self.__resulttype = None
+        self.__closed = True
 
     #----------------------------------------------------------------------
     def replace_nth(self, source, search, replace, n):
@@ -242,6 +244,9 @@ class py4d_cursor(object):
         """Prepare and execute a database operation"""
         if self.connection.connected == False:
             raise InternalError("Database not connected")
+
+        if self.__closed:
+            raise InterfaceError("cursor already closed.")
 
         # See if we are using named parameters. If so, break them out (we always need qmark style in the end)
         if isinstance(params, dict):
@@ -450,6 +455,9 @@ class py4d_cursor(object):
     #----------------------------------------------------------------------
     def fetchone(self):
         """"""
+        if self.__closed:
+            raise InterfaceError("cursor already closed.")
+
         if self.connection.connected == False:
             raise InternalError("Database not connected")
 
@@ -476,19 +484,20 @@ class py4d_cursor(object):
         row=[]
         for col in range(numcols):
             fieldtype=self.lib4d_sql.fourd_get_column_type(self.result,col)
-            if self.lib4d_sql.fourd_field(self.result,col)==ffi.NULL:  #shouldn't happen, really. but handle just in case.
+            if self.lib4d_sql.fourd_field(self.result,col)==ffi.NULL:
                         row.append(None)
                         continue
 
-            self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
+            conver_res = self.lib4d_sql.fourd_field_to_string(self.result, col, inbuff, strlen)
             strdata = inbuff[0]
             output = ffi.buffer(strdata, strlen[0])[:]
-            if strdata != ffi.NULL:
+            if strdata != ffi.NULL and conver_res == 1:
                 self.lib4d_sql.free(strdata)  #must call free explicitly, otherwise we leak.
                 strdata = ffi.NULL
 
             if fieldtype==self.lib4d_sql.VK_STRING or fieldtype==self.lib4d_sql.VK_TEXT:
-                row.append(output.decode('UTF-16LE'))
+                decoded_value = output.decode('UTF-16LE')
+                row.append(decoded_value)
             elif fieldtype == self.lib4d_sql.VK_BOOLEAN:
                 boolval = self.lib4d_sql.fourd_field_long(self.result, col)
                 row.append(bool(boolval[0]))
@@ -499,6 +508,8 @@ class py4d_cursor(object):
                 intval = self.lib4d_sql.fourd_field_long(self.result, col)
                 row.append(intval[0])
             elif fieldtype == self.lib4d_sql.VK_REAL or fieldtype == self.lib4d_sql.VK_FLOAT:
+                if output == b'':
+                    row.append(None)  #Empty output=null
                 row.append(float(output))
             elif fieldtype == self.lib4d_sql.VK_TIMESTAMP:
                 if output == '0000/00/00 00:00:00.000':
@@ -541,6 +552,9 @@ class py4d_cursor(object):
         if self.connection.connected == False:
             raise InternalError("Database not connected")
 
+        if self.__closed:
+            raise InterfaceError("cursor already closed.")
+
         if self.__resulttype is None:
             raise DataError("No rows to fetch")
 
@@ -558,6 +572,9 @@ class py4d_cursor(object):
         """"""
         if self.connection.connected == False:
             raise InternalError("Database not connected")
+
+        if self.__closed:
+            raise InterfaceError("cursor already closed.")
 
         if self.__resulttype is None:
             raise DataError("No rows to fetch")
@@ -614,7 +631,7 @@ class py4d_connection:
     in_transaction = False
 
     #----------------------------------------------------------------------
-    def __init__(self, host, user, password, database):
+    def __init__(self, host, user, password, database, port):
         """Initalize a connection object and connect to a server"""
         self.connptr = lib4d_sql.fourd_init()
         self.cursors = []
@@ -626,7 +643,7 @@ class py4d_connection:
                                             user.encode('utf-8'),
                                             password.encode('utf-8'),
                                             database.encode('utf-8'),
-                                            19812)
+                                            port)
         if connected != 0:
             self.connected = False
             raise OperationalError("Unable to connect to 4D Server")
@@ -653,6 +670,7 @@ class py4d_connection:
             for cursor in self.cursors:
                 if cursor.result is not None and cursor.result != ffi.NULL:
                     lib4d_sql.fourd_free_result(cursor.result)
+                    cursor.result = None
 
         if self.connected:
             disconnect = lib4d_sql.fourd_close(self.connptr)
@@ -703,7 +721,7 @@ class py4d_connection:
 
 
 #----------------------------------------------------------------------
-def connect(dsn=None, user=None, password=None, host=None, database=None):
+def connect(dsn=None, user=None, password=None, host=None, database=None, port=None):
     connect_args = {}
 
     # make an argument dict based off of the arguments passed.
@@ -713,7 +731,7 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
         for part in dsn_parts:
             part = part.strip()
             part_parts = part.split("=")
-            if part_parts[0] not in ['host', 'user', 'password', 'database']:
+            if part_parts[0] not in ['host', 'user', 'password', 'database', 'port']:
                 raise ValueError("Unrecognized parameter: {}".format(part_parts[0]))
 
             connect_args[part_parts[0]] = part_parts[1]
@@ -729,6 +747,11 @@ def connect(dsn=None, user=None, password=None, host=None, database=None):
 
     if database is not None:
         connect_args['database'] = database
+
+    if port is not None:
+        connect_args['port'] = int(port)
+    else:
+        connect_args['port'] = 19812
 
     if 'host' not in connect_args:
         # Need at least a host to connect to

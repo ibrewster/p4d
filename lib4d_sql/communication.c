@@ -30,6 +30,7 @@
 #include "fourd.h"
 #include "fourd_int.h"
 #include "base64.h"
+#include <sys/select.h>
 #include <string.h>
 #include <time.h>
 #ifdef WIN32
@@ -193,12 +194,23 @@ int socket_receiv_header(FOURD *cnx,FOURD_RESULT *state)
 	int offset=0;
 	int len=0;
 	int crlf=0;
+	int grow_size=1024; //1K
+	int new_size=grow_size;
+	
+	//allocate some space to start with
+	state->header=calloc(sizeof(char),new_size);
+	
 	//read the HEADER only
 	do 
 	{
 		offset+=iResult;
 		iResult = recv(cnx->socket,state->header+offset,1, 0);
 		len+=iResult;
+		if(len>new_size-5){
+			//header storage nearly full. Allocate more.
+			new_size=new_size+sizeof(char)*grow_size;
+			state->header=realloc(state->header,new_size);
+		}
 		if(len>3)
 		{
 			if(state->header[offset-3]=='\r'

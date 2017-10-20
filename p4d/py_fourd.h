@@ -87,7 +87,7 @@ typedef struct{
 
 typedef struct{
 	FOURD *cnx;
-	char header[2048];
+	char *header;
 	unsigned int header_size;
 
 	/*state of statement (OK or KO)*/

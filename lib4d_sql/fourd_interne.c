@@ -581,11 +581,44 @@ int traite_header_response(FOURD_RESULT* state)
 	}
 	//get Column-Aliases-Base64
 	{
-		char column_alias[2048];
+		char *column_alias;
 		char *alias=NULL;
 		unsigned int num=0;
+		char * col_start;
+		char * col_fin;
+		long base64_size=2048;
+		char *section="Column-Aliases-Base64";
+		
+		//Figure out the length of our section. fun with pointers!
+		//Start by getting a pointer to the start of the section label
+		col_start=strstr(header,section);
+		if(col_start!=NULL){
+			//advance the pointer by the length of the section label
+			col_start+=strlen(section);
+			//and find the first : (probably the next character)
+			col_start=strstr(col_start,":");
+			
+			if(col_start!=NULL){
+				//after making sure we still have something to work with,
+				//advance to the next character after the ":", which is the
+				//start of our data
+				col_start++;
+				
+				//now find the end. It should have a new line after it
+				col_fin=strstr(col_start,"\n");
+				if(col_fin!=NULL){
+					//we have pointers to the start and end of our data. So how long is it?
+					//just subtract the pointers!
+					base64_size=col_fin-col_start;
+				}
+			}
+		}
+		//if we ran into any issues with the above manipulation, we just use the
+		//default size of 2048 and pray it works :)
+		column_alias=calloc(sizeof(char), base64_size+5); //I always like to give a few bytes wiggle
+		
 		//char *context=NULL;
-		if(get(header,"Column-Aliases-Base64",column_alias,2048)==0) {
+		if(get(header,"Column-Aliases-Base64",column_alias,base64_size)==0) {
 			/* delete the last espace char if exist */
 			if(column_alias[strlen(column_alias)-1]==' ') {
 				column_alias[strlen(column_alias)-1]=0;
@@ -611,6 +644,7 @@ int traite_header_response(FOURD_RESULT* state)
 			}while(alias!=NULL);
 			Printf("Fin de la lecture des alias\n");
 		}
+		free(column_alias);
 	}
 	//get Row-Count
 	{

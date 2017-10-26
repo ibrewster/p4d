@@ -496,7 +496,7 @@ class py4d_cursor(object):
                 strdata = ffi.NULL
 
             if fieldtype==self.lib4d_sql.VK_STRING or fieldtype==self.lib4d_sql.VK_TEXT:
-                decoded_value = output.decode('UTF-16LE')
+                decoded_value = output.decode('UTF-16LE', errors="replace")
                 row.append(decoded_value)
             elif fieldtype == self.lib4d_sql.VK_BOOLEAN:
                 boolval = self.lib4d_sql.fourd_field_long(self.result, col)

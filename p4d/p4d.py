@@ -159,7 +159,7 @@ def TimestampFromTicks(ticks):
     return Timestamp(*timemod.localtime(ticks)[:6])
 
 ########################################################################
-class Binary(str):
+class Binary(bytes):
     """"""
     pass
 
@@ -534,6 +534,7 @@ class py4d_cursor(object):
             elif fieldtype == self.lib4d_sql.VK_BLOB or fieldtype == self.lib4d_sql.VK_IMAGE:
                 field = self.lib4d_sql.fourd_field(self.result, col)
                 if field != ffi.NULL:
+                    # Use cast to let the system know this is a BLOB type field
                     field = ffi.cast("FOURD_BLOB *", field)
                     fieldlen = field.length
                     fielddata = ffi.buffer(field.data, fieldlen)[:]

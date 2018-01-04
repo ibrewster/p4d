@@ -288,12 +288,17 @@ int socket_receiv_data(FOURD *cnx,FOURD_RESULT *state)
 				break;
 			default:
 				Printferr("Status code 0x%X not supported in data at row %d column %d\n",status_code,(elmts_offset-c+1)/nbCol+1,c+1);
+				free(colType);
+				state->error_code=-1;
+				sprintf_s(state->error_string,2048,"Status code not supported",2048);
+				return 1;
 				break;
 			}
 		}
 		else {
 			Printf("Not read rowid\n");
 		}
+		
 		/* read all columns */
 		for(c=0;c<nbCol;c++,elmts_offset++)
 		{

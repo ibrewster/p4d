@@ -11,3 +11,5 @@ testMain.c
 dist
 *.egg-info
 virtualenv
+env
+.eggs

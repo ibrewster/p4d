@@ -647,7 +647,7 @@ class py4d_connection:
                                             port)
         if connected != 0:
             self.connected = False
-            raise OperationalError("Unable to connect to 4D Server")
+            raise OperationalError("Unable to connect to 4D Server: {}".format(ffi.string(self.connptr.error_string)))
         else:
             self.connected = True
             self.__private_cursor__ = self.cursor()

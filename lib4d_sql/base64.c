@@ -58,7 +58,7 @@ static const short base64_reverse_table[256] = {
 //PHPAPI 
 unsigned char *base64_encode(const char *str, size_t length, int *ret_length)
 {
-	const unsigned char *current = str;
+	const unsigned char *current = (const unsigned char*)str;
 	unsigned char *p;
 	unsigned char *result;
 

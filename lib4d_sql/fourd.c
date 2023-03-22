@@ -465,7 +465,8 @@ FOURD_RESULT *fourd_exec_statement(FOURD_STATEMENT *state, int res_size)
 	FOURD_RESULT *result=NULL;
 	result=calloc(1,sizeof(FOURD_RESULT));
 	result->cnx=state->cnx;
-	if(_query_param(state->cnx,6,state->query,state->nb_element,state->elmt,result,state->preferred_image_types,res_size)==0)
+	int param_result=_query_param(state->cnx,6,state->query,state->nb_element,state->elmt,result,state->preferred_image_types,res_size);
+	if(param_result==0)
 	{
 		result->numRow=-1;
 		return result;
